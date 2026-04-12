@@ -7,7 +7,7 @@ CREATE TABLE Users (
                        description VARCHAR(128),
                        ban BOOLEAN,
                        passwordHash TEXT,
-                       mail VARCHAR(32),
+                       mail VARCHAR(32) NOT NULL UNIQUE,
                        solde NUMERIC,
                        CONSTRAINT PK_User PRIMARY KEY (id)
 );
