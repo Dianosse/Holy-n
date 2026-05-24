@@ -4,12 +4,12 @@ module.exports = function(sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       allowNull: false,
-      defaultValue: Sequelize.UUIDV4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
     libelle: {
-      type: DataTypes.STRING(16),
-      allowNull: true
+      type: DataTypes.STRING(64),
+      allowNull: false
     }
   }, {
     sequelize,

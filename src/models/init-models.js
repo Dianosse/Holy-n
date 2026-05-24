@@ -26,6 +26,8 @@ function initModels(sequelize) {
   users.belongsToMany(users, { as: 'idamis_users', through: amis, foreignKey: "iduser", otherKey: "idamis" });
   mise.belongsTo(choix, { as: "idchoix_choix", foreignKey: "idchoix"});
   choix.hasMany(mise, { as: "mises", foreignKey: "idchoix"});
+  pari.belongsTo(choix, { as: "idchoixgagnant_choix", foreignKey: "idchoixgagnant"});
+  choix.hasMany(pari, { as: "paris", foreignKey: "idchoixgagnant"});
   parichoix.belongsTo(choix, { as: "idchoix_choix", foreignKey: "idchoix"});
   choix.hasMany(parichoix, { as: "parichoixes", foreignKey: "idchoix"});
   mise.belongsTo(pari, { as: "idpari_pari", foreignKey: "idpari"});

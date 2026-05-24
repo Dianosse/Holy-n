@@ -4,12 +4,12 @@ module.exports = function(sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       allowNull: false,
-      defaultValue: Sequelize.UUIDV4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
     iduser: {
       type: DataTypes.UUID,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: 'users',
         key: 'id'
@@ -17,35 +17,47 @@ module.exports = function(sequelize, DataTypes) {
     },
     visible: {
       type: DataTypes.BOOLEAN,
-      allowNull: true
+      allowNull: false,
+      defaultValue: false
     },
     actif: {
       type: DataTypes.BOOLEAN,
-      allowNull: true
+      allowNull: false,
+      defaultValue: false
     },
     approuve: {
       type: DataTypes.BOOLEAN,
-      allowNull: true
+      allowNull: false,
+      defaultValue: false
     },
     intitule: {
-      type: DataTypes.STRING(32),
-      allowNull: true
+      type: DataTypes.STRING(64),
+      allowNull: false
     },
     description: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.TEXT,
       allowNull: true
     },
     datecreation: {
-      type: DataTypes.DATEONLY,
-      allowNull: true
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: Sequelize.Sequelize.fn('now')
     },
     datecloture: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: true
     },
-    datesuppression: {
-      type: DataTypes.DATEONLY,
+    datearchivage: {
+      type: DataTypes.DATE,
       allowNull: true
+    },
+    idchoixgagnant: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'choix',
+        key: 'id'
+      }
     }
   }, {
     sequelize,

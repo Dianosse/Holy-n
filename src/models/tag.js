@@ -4,12 +4,13 @@ module.exports = function(sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       allowNull: false,
-      defaultValue: Sequelize.UUIDV4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
     libelle: {
       type: DataTypes.STRING(16),
-      allowNull: true
+      allowNull: false,
+      unique: "tag_libelle_key"
     }
   }, {
     sequelize,
@@ -22,6 +23,13 @@ module.exports = function(sequelize, DataTypes) {
         unique: true,
         fields: [
           { name: "id" },
+        ]
+      },
+      {
+        name: "tag_libelle_key",
+        unique: true,
+        fields: [
+          { name: "libelle" },
         ]
       },
     ]

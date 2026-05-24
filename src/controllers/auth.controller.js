@@ -1,4 +1,5 @@
-const userModel = require('../models/users');
+const { users } = require('../models')
+
 const passwordUtils = require('../utils/passwordHash');
 
 async function registerUser(req, res) {
@@ -36,7 +37,7 @@ async function registerUser(req, res) {
             });
         }
 
-        const userExistant = await userModel.findOne({
+        const userExistant = await users.findOne({
             where :
                 {
                     mail : mail
@@ -54,7 +55,7 @@ async function registerUser(req, res) {
 
         console.log(passwordhash);
 
-        const user = await userModel.create({
+        const user = await users.create({
             admin,
             nom,
             prenom,
@@ -109,7 +110,7 @@ async function loginUser(req, res) {
             });
         }
 
-        const userExistant = await userModel.findOne({
+        const userExistant = await users.findOne({
             where :
                 {
                     mail : mail

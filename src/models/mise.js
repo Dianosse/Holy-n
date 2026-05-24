@@ -1,10 +1,15 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('mise', {
+    id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
+    },
     iduser: {
       type: DataTypes.UUID,
       allowNull: false,
-      primaryKey: true,
       references: {
         model: 'users',
         key: 'id'
@@ -13,7 +18,6 @@ module.exports = function(sequelize, DataTypes) {
     idpari: {
       type: DataTypes.UUID,
       allowNull: false,
-      primaryKey: true,
       references: {
         model: 'pari',
         key: 'id'
@@ -22,7 +26,6 @@ module.exports = function(sequelize, DataTypes) {
     idchoix: {
       type: DataTypes.UUID,
       allowNull: false,
-      primaryKey: true,
       references: {
         model: 'choix',
         key: 'id'
@@ -30,11 +33,12 @@ module.exports = function(sequelize, DataTypes) {
     },
     montant: {
       type: DataTypes.DECIMAL,
-      allowNull: true
+      allowNull: false
     },
     datedepari: {
-      type: DataTypes.DATEONLY,
-      allowNull: true
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: Sequelize.Sequelize.fn('now')
     }
   }, {
     sequelize,
@@ -46,9 +50,7 @@ module.exports = function(sequelize, DataTypes) {
         name: "pk_mise",
         unique: true,
         fields: [
-          { name: "iduser" },
-          { name: "idpari" },
-          { name: "idchoix" },
+          { name: "id" },
         ]
       },
     ]

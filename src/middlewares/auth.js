@@ -1,4 +1,4 @@
-const userModel = require('../models/users');
+const { users } = require('../models')
 
 async function protect(req, res, next) {
     try {
@@ -9,7 +9,7 @@ async function protect(req, res, next) {
             });
         }
 
-        const user = await userModel.findByPk(req.session.user.id);
+        const user = await users.findByPk(req.session.user.id);
 
         if (!user) {
             req.session.destroy(() => {});
