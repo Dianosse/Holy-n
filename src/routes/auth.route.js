@@ -11,4 +11,6 @@ router.use(protect);
 
 router.route('/logout').post(authController.logoutUser);
 
+router.route('/me').get(authController.getMe);
+
 module.exports = router;

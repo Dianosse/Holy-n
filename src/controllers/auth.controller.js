@@ -149,7 +149,7 @@ async function loginUser(req, res) {
                 admin: userExistant.admin
             };
 
-            return res.json({
+            return res.status(201).json({
                 success: true,
                 data: {
                     id: userExistant.id,
@@ -168,7 +168,7 @@ async function loginUser(req, res) {
     }
 }
 
-function logoutUser(req, res) {
+async function logoutUser(req, res) {
     req.session.destroy((err) => {
         if (err) {
             console.error(err);
@@ -187,8 +187,41 @@ function logoutUser(req, res) {
     });
 }
 
+async function getMe(req, res) {
+    try {
+
+        const user = await users.findOne({
+            where : {
+                id : req.user.id
+            }
+        });
+
+        return res.status(201).json({
+            success : true,
+            data : {
+                id : user.id,
+                admin : user.admin,
+                mail: user.mail,
+                pseudo: user.pseudo,
+                nom : user.nom,
+                prenom : user.prenom,
+                description : user.description,
+                ban : user.ban,
+                solde : user.solde
+            }
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: 'Erreur serveur'
+        });
+    }
+}
+
 module.exports = {
     registerUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    getMe
 };
