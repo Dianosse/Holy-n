@@ -7,6 +7,7 @@ require('dotenv').config();
 /* routeurs */
 const authRoute = require('./src/routes/auth.route');
 const usersRoute = require('./src/routes/users.route');
+const pariRoute = require('./src/routes/pari.route');
 
 /* middlewares */
 const log = require('./src/middlewares/log');
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
 
 app.use('/auth', authRoute);
 app.use('/users', usersRoute);
+app.use('/polls', pariRoute);
 
 /* routes avec auth */
 app.use(protect);

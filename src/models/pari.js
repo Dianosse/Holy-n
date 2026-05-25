@@ -45,7 +45,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     datecloture: {
       type: DataTypes.DATE,
-      allowNull: true
+      allowNull: false
     },
     datearchivage: {
       type: DataTypes.DATE,

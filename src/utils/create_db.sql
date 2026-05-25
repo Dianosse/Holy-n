@@ -38,7 +38,7 @@ CREATE TABLE Pari (
                       intitule VARCHAR(64) NOT NULL,
                       description TEXT,
                       dateCreation TIMESTAMPTZ NOT NULL DEFAULT now(),
-                      dateCloture TIMESTAMPTZ,  -- quand les gens ne pourront plus parier
+                      dateCloture TIMESTAMPTZ NOT NULL,  -- quand les gens ne pourront plus parier
                       dateArchivage TIMESTAMPTZ,  -- le pari n'est plus actif et est donc archivé
                       idChoixGagnant uuid,
                       CONSTRAINT PK_Pari PRIMARY KEY (id),
