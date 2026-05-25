@@ -30,10 +30,31 @@ async function registerUser(req, res) {
             });
         }
 
-        if (!mailRegex.test(mail)) {
+        if (!mailRegex.test(mail) || mail.length > 100) {
             return res.status(400).json({
                 success: false,
                 error: 'Format de mail invalide'
+            });
+        }
+
+        if(nom.trim().length === 0 || nom.length > 32) {
+            return res.status(400).json({
+                success: false,
+                error: 'Format de nom invalide'
+            });
+        }
+
+        if(prenom.trim().length === 0 || prenom.length > 32) {
+            return res.status(400).json({
+                success: false,
+                error: 'Format de prenom invalide'
+            });
+        }
+
+        if(pseudo.trim().length === 0 || pseudo.length > 32) {
+            return res.status(400).json({
+                success: false,
+                error: 'Format de pseudo invalide'
             });
         }
 
@@ -94,7 +115,7 @@ async function registerUser(req, res) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            error: 'Erreur serveur'
+            error: error.message
         });
     }
 }
@@ -163,33 +184,40 @@ async function loginUser(req, res) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            error: 'Erreur serveur'
+            error: error.message
         });
     }
 }
 
 async function logoutUser(req, res) {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                success: false,
-                error: 'Erreur lors de la déconnexion'
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    success: false,
+                    error: 'Erreur lors de la déconnexion'
+                });
+            }
+
+            res.clearCookie('connect.sid');
+
+            return res.json({
+                success: true,
+                message: 'Déconnexion réussie'
             });
-        }
-
-        res.clearCookie('connect.sid');
-
-        return res.json({
-            success: true,
-            message: 'Déconnexion réussie'
         });
-    });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 }
 
 async function getMe(req, res) {
     try {
-
         const user = await users.findOne({
             where : {
                 id : req.user.id
@@ -214,7 +242,7 @@ async function getMe(req, res) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            error: 'Erreur serveur'
+            error: error.message
         });
     }
 }

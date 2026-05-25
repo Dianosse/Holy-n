@@ -31,7 +31,7 @@ CREATE TABLE Choix (
 
 CREATE TABLE Pari (
                       id uuid DEFAULT gen_random_uuid(),
-                      idUser uuid NOT NULL,
+                      idUser uuid NOT NULL,                         -- créateur du pari
                       visible BOOLEAN NOT NULL DEFAULT false,       -- est-ce que le pari est visible pour tous les utilisateurs ?
                       actif BOOLEAN NOT NULL DEFAULT false,         -- le pari a-t-il été archivé ou non approuvé ?
                       approuve BOOLEAN NOT NULL DEFAULT false,      -- le pari a-t-il été validé par un admin ?
