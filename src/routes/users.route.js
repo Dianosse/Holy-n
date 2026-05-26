@@ -6,7 +6,7 @@ const router = require('express').Router();
 router.route('/leaderbord').get(usersController.getLeaderbord);
 
 router.route('/me').put(protect, usersController.modifyUser)                // fait
-                            .delete(protect, usersController.deleteUser);
+                            .delete(protect, usersController.deleteUser);         // fait
 
 router.route('/me/bets').get(protect, usersController.getUserBets);         // fait
 

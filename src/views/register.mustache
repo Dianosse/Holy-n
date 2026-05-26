@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription</title>
+</head>
+<body>
+<h1>Inscription</h1>
+
+{{#error}}
+    <p style="color:red;">{{error}}</p>
+{{/error}}
+
+<form method="POST" action="/auth/register">
+    <div>
+        <label>Mail</label>
+        <input type="email" name="mail" required>
+    </div>
+
+    <div>
+        <label>Pseudo</label>
+        <input type="text" name="pseudo" maxlength="32" required>
+    </div>
+
+    <div>
+        <label>Nom</label>
+        <input type="text" name="nom" maxlength="32" required>
+    </div>
+
+    <div>
+        <label>Prénom</label>
+        <input type="text" name="prenom" maxlength="32" required>
+    </div>
+
+    <div>
+        <label>Mot de passe</label>
+        <input type="password" name="password" required>
+    </div>
+
+    <div>
+        <label>Confirmer le mot de passe</label>
+        <input type="password" name="passwordConfirm" required>
+    </div>
+
+    <button type="submit">Créer mon compte</button>
+</form>
+</body>
+</html>

@@ -1,11 +1,86 @@
-const { pari, tag, users, paritag, parichoix, choix } = require('../models');
+const { pari, tag, users, paritag, parichoix, choix, mise } = require('../models');
+const { Op } = require("sequelize");
 
+// TODO : un peu partout, vérifier que l'utilisateur n'est pas banni, vérifier pour les polls les booleans du type actif
+
+
+/**
+ * exemple de requête : http://localhost:3000/api/polls?search=aaaaa&tag=sport&sort=ASC&page=1&limit=10
+ */
 async function getAllPolls(req, res) {
     try {
-        // TODO : recherche par mot-clef dans intitule/description, par tag et par choix
-        const polls = await pari.findByPk({
-            where : {
-                approuve : true
+        const { search, tag: tagQuery, sort } = req.query;
+
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50);
+        const offset = (page - 1) * limit;
+
+        const where = {
+            visible: true,
+            actif: true,
+            approuve: true
+        };
+
+        const order = [];
+
+        if (search) {
+            where[Op.or] = [
+                { intitule: { [Op.iLike]: `%${search}%` } },
+                { description: { [Op.iLike]: `%${search}%` } }
+            ];
+        }
+
+        if (sort?.toUpperCase() === "ASC") {
+            order.push(["datecreation", "ASC"]);
+        } else {
+            order.push(["datecreation", "DESC"]);
+        }
+
+        const include = [
+            {
+                model: tag,
+                as: "idtag_tags",
+                attributes: ["id", "libelle"],
+                through: {
+                    attributes: []
+                },
+                required: !!tagQuery,
+                ...(tagQuery && {
+                    where: {
+                        libelle: {
+                            [Op.iLike]: tagQuery
+                        }
+                    }
+                })
+            }
+        ];
+
+        const { count, rows } = await pari.findAndCountAll({
+            attributes: [
+                "id",
+                "intitule",
+                "description",
+                "datecreation",
+                "datecloture"
+            ],
+            where,
+            include,
+            order,
+            limit,
+            offset,
+            distinct: true
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                polls: rows
+            },
+            pagination: {
+                page,
+                limit,
+                totalItems: count,
+                totalPages: Math.ceil(count / limit)
             }
         });
     } catch(error) {
@@ -84,6 +159,30 @@ async function getPollById(req, res) {
 
 async function deletePollById(req, res) {
     try {
+        const poll = await pari.findByPk(req.params.id);
+
+        if(!poll) {
+            return res.status(404).json({
+                message : "Pari introuvable"
+            });
+        }
+
+        const idUserSuppose = poll.iduser;
+
+        if(idUserSuppose !== req.user.id) {
+            return res.status(404).json({
+                message : "L'utilisateur essayant de supprimer le pari n'est pas celui à l'origine de ce pari"
+            });
+        }
+
+        await poll.destroy();
+
+        return res.status(201).json({
+            success: true,
+            data : {
+                message : "Pari supprimé avec succès"
+            }
+        });
 
     } catch(error) {
         console.error(error);
@@ -140,12 +239,23 @@ async function postSubmitPoll(req, res) {
 
         const iduser = req.user.id;
 
-        // TODO : faire que chaque pari a un nom unique ?
-
         if(!intitule || intitule < 3 || intitule > 64) {
             return res.status(400).json({
                 success: false,
                 error: "Intitule invalide"
+            });
+        }
+
+        const pariExistant = await pari.findOne({
+            where : {
+                intitule : intitule
+            }
+        });
+
+        if (pariExistant) {                                 // chaque pari doit avoir un nom unique
+            return res.status(400).json({
+                success: false,
+                error: "Un autre pari a déjà cet intitulé"
             });
         }
 
@@ -282,8 +392,105 @@ async function postSubmitPoll(req, res) {
     }
 }
 
+/**
+ * {
+ *   "idChoix": "67b85b91-c10a-43bd-be9f-60cf62eb4580",
+ *   "montant": 25
+ * }
+ */
 async function postBet(req, res) {
     try {
+        const poll = await pari.findByPk(req.params.id);
+
+        if(!poll) {
+            return res.status(404).json({
+                message : "Pari introuvable"
+            });
+        }
+
+        if(!poll.actif || !poll.visible || !poll.approuve) {
+            return res.status(404).json({
+                message : "Il n'est possible de parier que sur des paris actifs, visibles pour tous et approuvés par un admin"
+            });
+        }
+
+        const userExistant = await users.findOne({
+            where : {
+                id : req.user.id
+            }
+        });
+
+        if(!userExistant) {
+            return res.status(404).json({
+                message : "User introuvable"
+            });
+        }
+
+
+        const { idChoix, montant } = req.body;
+
+        const choixExistant = await choix.findOne({
+            where : {
+                id : idChoix
+            }
+        });
+
+        if(!choixExistant) {
+            return res.status(404).json({
+                message : "Choix introuvable"
+            });
+        }
+
+        if(montant === undefined || montant === null || montant === "") {
+            return res.status(400).json({
+                success: false,
+                error: "Le montant est obligatoire"
+            });
+        }
+
+        const montantNumber = Number(montant);
+
+        if (Number.isNaN(montantNumber)) {
+            return res.status(400).json({
+                success: false,
+                error: "Le montant doit être un nombre"
+            });
+        }
+
+        if (montantNumber <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: "Le montant doit être positif"
+            });
+        }
+
+        const newSolde = Number(userExistant.solde) - montantNumber;
+
+        if(newSolde < 0) {
+            return res.status(400).json({
+                success: false,
+                error: "Impossible de tomber en négatif en pariant"
+            });
+        }
+
+
+        const newMise = await mise.create({
+            iduser : userExistant.id,
+            idpari : poll.id,
+            idchoix : choixExistant.id,
+            montant : montantNumber
+        });
+
+        await userExistant.update({
+            solde : newSolde
+        });
+
+        return res.status(200).json({
+            success : true,
+            data : {
+                newMise
+            }
+        });
 
     } catch(error) {
         console.error(error);
@@ -296,6 +503,27 @@ async function postBet(req, res) {
 
 async function getBets(req, res) {
     try {
+        const poll = await pari.findByPk(req.params.id);
+
+        if(!poll) {
+            return res.status(404).json({
+                message : "Pari introuvable"
+            });
+        }
+
+        const allBets = await mise.findAll({
+            where : {
+                idpari : poll.id
+            }
+        });
+
+        return res.status(200).json({
+            success : true,
+            data : {
+                allBets
+            }
+        });
+
 
     } catch(error) {
         console.error(error);

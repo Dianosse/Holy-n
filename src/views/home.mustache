@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil</title>
+</head>
+<body>
+<h1>Accueil</h1>
+
+{{#user}}
+    <p>Connecté en tant que {{pseudo}}</p>
+
+    <form method="POST" action="/auth/logout">
+        <button type="submit">Se déconnecter</button>
+    </form>
+{{/user}}
+
+{{^user}}
+    <a href="/register">Créer un compte</a>
+{{/user}}
+</body>
+</html>
