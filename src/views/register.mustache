@@ -2,47 +2,72 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Inscription</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holy'n - Inscription</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<h1>Inscription</h1>
 
-{{#error}}
-    <p style="color:red;">{{error}}</p>
-{{/error}}
+    {{> header}}
 
-<form method="POST" action="/auth/register">
-    <div>
-        <label>Mail</label>
-        <input type="email" name="mail" required>
+    <div class="auth-page">
+        <div class="auth-card">
+
+            <a href="/" class="auth-logo">
+                <img src="/images/logo.png" alt="Holy'n">
+                <span class="auth-logo-text">Holy'n</span>
+            </a>
+
+            <h1 class="auth-title">Créer un compte</h1>
+            <p class="auth-subtitle">Rejoignez Holy'n et commencez à parier</p>
+
+            <div id="error-msg" class="error-message"></div>
+
+            <form onsubmit="submitRegister(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="nom">Nom</label>
+                        <input type="text" id="nom" name="nom" class="form-input"
+                            placeholder="Dupont" autocomplete="family-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="prenom">Prénom</label>
+                        <input type="text" id="prenom" name="prenom" class="form-input"
+                            placeholder="Jean" autocomplete="given-name" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pseudo">Pseudo</label>
+                    <input type="text" id="pseudo" name="pseudo" class="form-input"
+                        placeholder="jeandupont42" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="mail">Adresse e-mail</label>
+                    <input type="email" id="mail" name="mail" class="form-input"
+                        placeholder="exemple@email.com" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" class="form-input"
+                        placeholder="••••••••" autocomplete="new-password" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="passwordConfirm">Confirmer le mot de passe</label>
+                    <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-input"
+                        placeholder="••••••••" autocomplete="new-password" required>
+                </div>
+                <button type="submit" class="btn btn-orange btn-full">Créer mon compte</button>
+            </form>
+
+            <p class="auth-link">Déjà un compte ? <a href="/login">Se connecter</a></p>
+
+        </div>
     </div>
 
-    <div>
-        <label>Pseudo</label>
-        <input type="text" name="pseudo" maxlength="32" required>
-    </div>
+    <script src="/js/auth.js"></script>
 
-    <div>
-        <label>Nom</label>
-        <input type="text" name="nom" maxlength="32" required>
-    </div>
-
-    <div>
-        <label>Prénom</label>
-        <input type="text" name="prenom" maxlength="32" required>
-    </div>
-
-    <div>
-        <label>Mot de passe</label>
-        <input type="password" name="password" required>
-    </div>
-
-    <div>
-        <label>Confirmer le mot de passe</label>
-        <input type="password" name="passwordConfirm" required>
-    </div>
-
-    <button type="submit">Créer mon compte</button>
-</form>
 </body>
 </html>

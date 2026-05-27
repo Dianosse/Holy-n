@@ -25,10 +25,13 @@ const protect = require('./src/middlewares/auth');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+/* models */
+const { users: userModel, tag: tagModel } = require('./src/models');
+
 /* mustache */
-app.engine('mustache', mustacheExpress());
+app.engine('mustache', mustacheExpress(path.join(__dirname, 'src', 'views', 'partials'), '.mustache'));
 app.set('view engine', 'mustache');
-app.set('views', path.join(__dirname, 'src/views'));
+app.set('views', path.join(__dirname, 'src', 'views'));
 
 
 app.use(log);
@@ -50,14 +53,51 @@ app.use(session({
 
 /* -------- route front -------- */
 
-app.get("/", (req, res) => {
-    res.render("home", {
-        user: req.session.user
-    });
+app.get('/', async (req, res) => {
+    let user = null;
+
+    if (req.session?.user) {
+        try {
+            const dbUser = await userModel.findByPk(req.session.user.id, {
+                attributes: ['id', 'pseudo', 'admin', 'solde']
+            });
+            if (dbUser) {
+                user = {
+                    pseudo: dbUser.pseudo,
+                    pseudo_initial: dbUser.pseudo.charAt(0).toUpperCase(),
+                    admin: dbUser.admin || undefined,
+                    solde: Number(dbUser.solde).toFixed(2)
+                };
+            } else {
+                req.session.destroy(() => {});
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // ---Route pas encore codée--- GET /api/polls : getAllPolls non terminé côté back
+    const paris = [];
+
+    let tags = [];
+    try {
+        const allTags = await tagModel.findAll({ attributes: ['libelle'] });
+        tags = allTags.map((t, i) => ({ libelle: t.libelle, actif: i === 0 }));
+    } catch (err) {
+        console.error(err);
+    }
+
+    res.render('home', { user, paris, tags });
 });
 
-app.get("/register", (req, res) => {
-    res.render("register");
+app.get('/login', (req, res) => {
+    if (req.session?.user) return res.redirect('/');
+    res.render('login', { user: null, hideSearch: true });
+});
+
+app.get('/register', (req, res) => {
+    if (req.session?.user) return res.redirect('/');
+    res.render('register', { user: null, hideSearch: true });
 });
 
 /* -------- route back -------- */

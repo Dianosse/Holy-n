@@ -2,21 +2,60 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Accueil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holy'n - Paris en ligne</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<h1>Accueil</h1>
 
-{{#user}}
-    <p>Connecté en tant que {{pseudo}}</p>
+    {{> header}}
 
-    <form method="POST" action="/auth/logout">
-        <button type="submit">Se déconnecter</button>
-    </form>
-{{/user}}
+    <nav class="nav-tags">
+        {{#tags}}
+        <a href="/?tag={{libelle}}" class="tag-item{{#actif}} active{{/actif}}">{{libelle}}</a>
+        {{/tags}}
+    </nav>
 
-{{^user}}
-    <a href="/register">Créer un compte</a>
-{{/user}}
+    <main class="main-content">
+        <div class="bets-grid">
+            {{#paris}}
+            {{! manque une route get /paris : pour les cartes de paris }}
+            {{/paris}}
+            {{^paris}}
+            <div class="bet-card">
+                <div class="bet-card-header">
+                    <p class="bet-question">La France gagne la coupe du monde ?</p>
+                </div>
+                <div class="bet-choices">
+                    <button class="bet-choice-btn orange">Oui</button>
+                    <button class="bet-choice-btn navy">Non</button>
+                </div>
+                <p class="bet-volume">Vol. Tot. : 295M€</p>
+            </div>
+            <div class="bet-card">
+                <div class="bet-card-header">
+                    <p class="bet-question">Date de la fin du monde</p>
+                </div>
+                <div class="bet-choices">
+                    <button class="bet-choice-btn navy full">Voir les choix</button>
+                </div>
+                <p class="bet-volume">Vol. Tot. : 5€</p>
+            </div>
+            <div class="bet-card placeholder"></div>
+            <div class="bet-card placeholder"></div>
+            <div class="bet-card placeholder"></div>
+            <div class="bet-card placeholder"></div>
+            <div class="bet-card placeholder"></div>
+            <div class="bet-card placeholder"></div>
+            <div class="bet-card placeholder"></div>
+            {{/paris}}
+        </div>
+    </main>
+
+    <script src="/js/auth.js"></script>
+
 </body>
 </html>

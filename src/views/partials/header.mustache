@@ -1,0 +1,43 @@
+<header class="header">
+    <a href="/" class="logo">
+        <img src="/images/logo.png" alt="Holy'n" class="logo-img">
+        <span class="logo-text">Holy'n</span>
+    </a>
+    {{^hideSearch}}
+    <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Rechercher">
+    </div>
+    {{/hideSearch}}
+    <div class="header-actions">
+        {{#user}}
+        <div class="user-info">
+            <div class="user-stat">
+                <span class="stat-label">Volume</span>
+                {{! -manque une route get /stats/user/:id }}
+                <span class="stat-value">—</span>
+            </div>
+            <div class="user-stat">
+                <span class="stat-label">Solde</span>
+                <span class="stat-value">{{solde}}€</span>
+            </div>
+            <div class="user-menu" onclick="toggleMenu()">
+                <div class="avatar-circle">{{pseudo_initial}}</div>
+                <span class="username">{{pseudo}}</span>
+                <div class="dropdown" id="user-dropdown">
+                    {{! manque une route get /profil }}
+                    <a href="#" class="dropdown-item">Mon profil</a>
+                    {{#admin}}
+                    {{! manque une route get /admin }}
+                    <a href="#" class="dropdown-item">Administration</a>
+                    {{/admin}}
+                    <button onclick="logout()" class="dropdown-item dropdown-logout">Se déconnecter</button>
+                </div>
+            </div>
+        </div>
+        {{/user}}
+        {{^user}}
+        <a href="/login" class="btn btn-orange">Se connecter</a>
+        <a href="/register" class="btn btn-navy">S'inscrire</a>
+        {{/user}}
+    </div>
+</header>
