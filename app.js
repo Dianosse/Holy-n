@@ -102,6 +102,15 @@ app.get('/register', (req, res) => {
 
 /* -------- route back -------- */
 
+//ça permet de rediriger les utilisateurs vers l'acceuil quand ils vont sur une route /api
+app.use('/api', (req, res, next) => {
+    const accept = req.headers['accept'] || '';
+    if (accept.includes('text/html')) {
+        return res.redirect('/');
+    }
+    next();
+});
+
 /* routes back publiques */
 app.get("/api", (req, res) => {
     res.json({
