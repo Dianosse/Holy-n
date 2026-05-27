@@ -15,4 +15,6 @@ router.route('/:id/bets').post(protect, pariController.postBet)                 
 
 router.route('/submit').post(protect, pariController.postSubmitPoll);               // ---> fait
 
+router.route('/:id/quotes').get(pariController.getQuoteAllChoicesById);             // ---> fait
+
 module.exports = router;

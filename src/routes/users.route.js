@@ -18,4 +18,11 @@ router.route('/:id/stats').get(usersController.getUserStatsById);
 
 router.route('/:id/polls').get(usersController.getUserPollsById);           // fait
 
+router.route('/:id/follow').post(protect, usersController.postFollowUserById)               // fait
+                                    .delete(protect, usersController.deleteFollowUserById);       // fait
+
+router.route('/:id/followers').get(protect, usersController.getFollowersById);              // fait
+
+router.route('/:id/following').get(protect, usersController.getFollowingById);              // fait
+
 module.exports = router;

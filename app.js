@@ -20,6 +20,7 @@ const adminUsersRoute = require('./src/routes/adminUsers.route');
 /* middlewares */
 const log = require('./src/middlewares/log');
 const protect = require('./src/middlewares/auth');
+const isAdmin = require('./src/middlewares/isAdmin');
 
 /* initialization */
 const app = express();
@@ -126,6 +127,7 @@ app.use('/api/polls', pariRoute);
 app.use(protect);
 app.use('/api/wallets', walletRoute);
 
+app.use(isAdmin);
 app.use('/api/admin/tags', adminTagsRoute);
 app.use('/api/admin/users', adminUsersRoute);
 app.use('/api/admin/polls', adminPariRoute);

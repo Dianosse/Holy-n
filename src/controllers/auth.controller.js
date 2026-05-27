@@ -66,7 +66,7 @@ async function registerUser(req, res) {
         });
 
         if(userExistant != null) {
-            return res.status(409).json({
+            return res.status(400).json({
                 success: false,
                 error: 'Mail déjà utilisé'
             });
@@ -202,7 +202,7 @@ async function logoutUser(req, res) {
 
             res.clearCookie('connect.sid');
 
-            return res.json({
+            return res.status(200).json({
                 success: true,
                 message: 'Déconnexion réussie'
             });

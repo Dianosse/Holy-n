@@ -3,6 +3,6 @@ const router = require('express').Router();
 
 router.route('/').post(adminTagsController.postCreateTag);                          // ---> fait
 
-router.route('/:id').delete(adminTagsController.deleteTagById);
+router.route('/:id').delete(adminTagsController.deleteTagById);                     // ---> fait
 
 module.exports = router;

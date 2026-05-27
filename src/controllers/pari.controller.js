@@ -1,5 +1,7 @@
 const { pari, tag, users, paritag, parichoix, choix, mise } = require('../models');
 const { Op } = require("sequelize");
+const sequelize = require("../config/database");
+const { QueryTypes } = require('sequelize');
 
 // TODO : un peu partout, vérifier que l'utilisateur n'est pas banni, vérifier pour les polls les booleans du type actif
 
@@ -98,7 +100,8 @@ async function getPollById(req, res) {
 
         if(!poll) {
             return res.status(404).json({
-                message : "Pari introuvable"
+                success: false,
+                error : "Pari introuvable"
             });
         }
 
@@ -163,7 +166,8 @@ async function deletePollById(req, res) {
 
         if(!poll) {
             return res.status(404).json({
-                message : "Pari introuvable"
+                success: false,
+                error : "Pari introuvable"
             });
         }
 
@@ -171,7 +175,8 @@ async function deletePollById(req, res) {
 
         if(idUserSuppose !== req.user.id) {
             return res.status(404).json({
-                message : "L'utilisateur essayant de supprimer le pari n'est pas celui à l'origine de ce pari"
+                success: false,
+                error : "L'utilisateur essayant de supprimer le pari n'est pas celui à l'origine de ce pari"
             });
         }
 
@@ -404,13 +409,15 @@ async function postBet(req, res) {
 
         if(!poll) {
             return res.status(404).json({
-                message : "Pari introuvable"
+                success: false,
+                error : "Pari introuvable"
             });
         }
 
         if(!poll.actif || !poll.visible || !poll.approuve) {
             return res.status(404).json({
-                message : "Il n'est possible de parier que sur des paris actifs, visibles pour tous et approuvés par un admin"
+                success: false,
+                error : "Il n'est possible de parier que sur des paris actifs, visibles pour tous et approuvés par un admin"
             });
         }
 
@@ -422,7 +429,8 @@ async function postBet(req, res) {
 
         if(!userExistant) {
             return res.status(404).json({
-                message : "User introuvable"
+                success: false,
+                error : "User introuvable"
             });
         }
 
@@ -437,7 +445,8 @@ async function postBet(req, res) {
 
         if(!choixExistant) {
             return res.status(404).json({
-                message : "Choix introuvable"
+                success: false,
+                error : "Choix introuvable"
             });
         }
 
@@ -507,7 +516,8 @@ async function getBets(req, res) {
 
         if(!poll) {
             return res.status(404).json({
-                message : "Pari introuvable"
+                success: false,
+                error : "Pari introuvable"
             });
         }
 
@@ -534,6 +544,92 @@ async function getBets(req, res) {
     }
 }
 
+
+async function getQuoteAllChoicesById(req, res) {
+    try {
+        const poll = await pari.findByPk(req.params.id);
+
+        if (!poll) {
+            return res.status(404).json({
+                success: false,
+                error: "Pari introuvable"
+            });
+        }
+
+        if (!poll.visible || !poll.approuve) {
+            return res.status(403).json({
+                success: false,
+                error: "Ce pari n'est pas accessible"
+            });
+        }
+
+        const choices = await sequelize.query(
+            `
+                SELECT 
+                    c.id,
+                    c.libelle,
+                    COALESCE(SUM(m.montant), 0) AS total_mise
+                FROM parichoix pc
+                INNER JOIN choix c ON pc.idchoix = c.id
+                LEFT JOIN mise m 
+                    ON m.idchoix = c.id 
+                    AND m.idpari = pc.idpari
+                WHERE pc.idpari = :idPari
+                GROUP BY c.id, c.libelle;
+            `,
+            {
+                replacements: {
+                    idPari: poll.id
+                },
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+        let totalVolumeChoix = 0;
+        for (let i = 0; i < choices.length; i++) {
+            totalVolumeChoix += Number(choices[i].total_mise);
+        }
+
+        const quotes = choices.map(choice => {
+            const totalMise = Number(choice.total_mise);
+
+            let quote;
+
+            if (totalVolumeChoix === 0) {
+                quote = choices.length;
+            } else if (totalMise === 0) {
+                quote = null;
+            } else {
+                quote = totalVolumeChoix / totalMise;
+            }
+
+            return {
+                id: choice.id,
+                libelle: choice.libelle,
+                totalMise,
+                quote: quote === null ? null : Number(quote.toFixed(2))
+            };
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                pollId: poll.id,
+                totalVolumeChoix,
+                quotes
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
 module.exports = {
     getAllPolls,
     getPollById,
@@ -541,5 +637,6 @@ module.exports = {
     getAllTags,
     postSubmitPoll,
     postBet,
-    getBets
+    getBets,
+    getQuoteAllChoicesById
 };

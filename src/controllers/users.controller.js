@@ -1,4 +1,7 @@
-const { users, pari, mise } = require('../models')
+const { users, pari, mise, amis } = require('../models');
+const sequelize = require("../config/database");
+const { QueryTypes } = require("sequelize");
+
 
 async function getLeaderbord(req, res) {
 
@@ -164,7 +167,8 @@ async function getUserById(req, res) {
 
         if(!user) {
             return res.status(404).json({
-                message : "User introuvable"
+                success: false,
+                error : "User introuvable"
             });
         }
 
@@ -211,7 +215,8 @@ async function getUserPollsById(req, res) {
 
         if (!user) {
             return res.status(404).json({
-                message : "User introuvable"
+                success: false,
+                error : "User introuvable"
             });
         }
 
@@ -236,6 +241,203 @@ async function getUserPollsById(req, res) {
     }
 }
 
+/**
+ * idUser = la personne qui suit
+ * idAmis = la personne suivie
+ */
+async function postFollowUserById(req, res) {
+    try {
+        const userConnecteId = req.user.id;
+        const userExistant = await users.findByPk(req.params.id);
+
+        if(!userExistant) {
+            return res.status(404).json({
+                success: false,
+                error : "Un user n'existe pas"
+            });
+        }
+
+        if(userConnecteId === userExistant.id) {
+            return res.status(400).json({
+                success: false,
+                error : "Impossible d'être amis avec soi-même"
+            });
+        }
+
+        const amiExistant = await amis.findOne({
+            where : {
+                iduser : userConnecteId,
+                idamis : userExistant.id
+            }
+        });
+
+        if(amiExistant) {
+            return res.status(400).json({
+                success: false,
+                error : "L'utilisateur actuellement connecté follow déjà cet user"
+            });
+        }
+
+        await amis.create({
+            iduser : userConnecteId,
+            idamis : userExistant.id
+        });
+
+        return res.status(201).json({
+            success : true,
+            data : {
+                success: false,
+                error : "L'utilisateur connecté follow désormais cet user"
+            }
+        });
+
+    } catch(error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+async function deleteFollowUserById(req, res) {
+    try {
+        const userConnecteId = req.user.id;
+        const userExistant = await users.findByPk(req.params.id);
+
+        if(!userExistant) {
+            return res.status(404).json({
+                success: false,
+                error : "L'user mentionné n'existe pas"
+            });
+        }
+
+        const amiExistant = await amis.findOne({
+            where : {
+                iduser : userConnecteId,
+                idamis : userExistant.id
+            }
+        });
+
+        if(!amiExistant) {
+            return res.status(400).json({
+                success: false,
+                error : "L'utilisateur connecté ne follow pas cet user"
+            });
+        }
+
+        await amiExistant.destroy();
+
+        return res.status(200).json({
+            success : true,
+            data : {
+                success: false,
+                error : "L'utilisateur connecté ne follow plus cet user"
+            }
+        });
+
+    } catch(error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+/**
+ * Retourne les users qui suivent l'user qui a l'id :id
+ */
+async function getFollowersById(req, res) {
+    try {
+        const userExistant = await users.findByPk(req.params.id);
+
+        if(!userExistant) {
+            return res.status(404).json({
+                success: false,
+                error : "L'user mentionné n'existe pas"
+            });
+        }
+
+        const allFollowers = await sequelize.query(
+            `
+                SELECT u1.id, u1.pseudo, u1.mail
+                FROM amis a
+                         INNER JOIN users u1 ON a.iduser = u1.id
+                         INNER JOIN users u2 ON a.idamis = u2.id
+                WHERE u2.id = :idUser;
+            `,
+            {
+                replacements: {
+                    idUser: userExistant.id
+                },
+                type: QueryTypes.SELECT
+            }
+        );
+
+        return res.status(200).json({
+            success : true,
+            data : {
+                allFollowers
+            }
+        });
+
+    } catch(error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+/**
+ * Retourne les users que :id follow
+ */
+async function getFollowingById(req, res) {
+    try {
+        const userExistant = await users.findByPk(req.params.id);
+
+        if(!userExistant) {
+            return res.status(404).json({
+                success: false,
+                error : "L'user mentionné n'existe pas"
+            });
+        }
+
+        const allFollowing = await sequelize.query(
+            `
+                SELECT u2.id, u2.pseudo, u2.mail
+                FROM amis a
+                         INNER JOIN users u1 ON a.iduser = u1.id
+                         INNER JOIN users u2 ON a.idamis = u2.id
+                WHERE u1.id = :idUser;
+            `,
+            {
+                replacements: {
+                    idUser: userExistant.id
+                },
+                type: QueryTypes.SELECT
+            }
+        );
+
+        return res.status(200).json({
+            success : true,
+            data : {
+                allFollowing
+            }
+        });
+
+    } catch(error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+
 
 module.exports = {
     getLeaderbord,
@@ -245,5 +447,9 @@ module.exports = {
     getUserStatsById,
     getUserPollsById,
     deleteUser,
-    getUserPolls
+    getUserPolls,
+    postFollowUserById,
+    deleteFollowUserById,
+    getFollowersById,
+    getFollowingById
 };
