@@ -1,4 +1,7 @@
-const { users, pari, choix, tag, parichoix } = require('../models');
+const { users, pari, choix, tag, parichoix, mise } = require('../models');
+const { Op } = require('sequelize');
+const sequelize = require("../config/database");
+
 
 async function getAllPollsPending(req, res) {
     try {
@@ -180,7 +183,7 @@ async function patchResolvePoll(req, res) {
         await poll.update({
             idchoixgagnant : idChoix,
             actif: false,
-            dateresolution: new Date()
+            datearchivage : new Date()
         });
 
         return res.status(200).json({
@@ -200,6 +203,93 @@ async function patchResolvePoll(req, res) {
 }
 
 
+async function patchRedistributePoll(req, res) {
+    try {
+        const poll = await pari.findByPk(req.params.id);
+
+        if (!poll) {
+            return res.status(404).json({
+                success: false,
+                error: "Pari introuvable"
+            });
+        }
+
+        if (poll.actif !== false || !poll.datearchivage || !poll.idchoixgagnant) {
+            return res.status(400).json({
+                success: false,
+                error: "Le pari doit être fermé et résolu avant redistribution"
+            });
+        }
+
+        const allMises = await mise.findAll({
+            where: {
+                idpari: poll.id
+            }
+        });
+
+        if (allMises.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    message: "Aucune mise sur ce pari, rien à redistribuer"
+                }
+            });
+        }
+
+        const totalMisePari = allMises.reduce((sum, m) => {
+            return sum + Number(m.montant);
+        }, 0);
+
+        const misesGagnantes = allMises.filter(m => {
+            return m.idchoix === poll.idchoixgagnant;
+        });
+
+        if (misesGagnantes.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    message: "Aucun gagnant pour ce pari",
+                    totalMisePari
+                }
+            });
+        }
+
+        const totalMiseGagnante = misesGagnantes.reduce((sum, m) => {
+            return sum + Number(m.montant);
+        }, 0);
+
+        for (const miseGagnante of misesGagnantes) {
+            const montantMise = Number(miseGagnante.montant);
+
+            const gain = (montantMise / totalMiseGagnante) * totalMisePari;
+
+            const userGagnant = await users.findByPk(miseGagnante.iduser);
+
+            if (userGagnant) {
+                await userGagnant.update({
+                    solde: Number(userGagnant.solde) + gain
+                });
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                message: "Argent redistribué aux gagnants",
+                totalMisePari,
+                totalMiseGagnante,
+                nbGagnants: misesGagnantes.length
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
 
 
 module.exports = {
@@ -207,5 +297,6 @@ module.exports = {
     patchAcceptPoll,
     patchRefusePoll,
     patchClosePoll,
-    patchResolvePoll
+    patchResolvePoll,
+    patchRedistributePoll
 }

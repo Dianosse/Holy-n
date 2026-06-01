@@ -11,5 +11,7 @@ router.route('/:id/close').patch(adminPariController.patchClosePoll);           
 
 router.route('/:id/resolve').patch(adminPariController.patchResolvePoll);           // ---> fait
 
+router.route('/:id/redistribute').patch(adminPariController.patchRedistributePoll); // ---> fait
+
 
 module.exports = router;

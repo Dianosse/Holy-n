@@ -1,10 +1,79 @@
 const { users, pari, mise, amis } = require('../models');
 const sequelize = require("../config/database");
 const { QueryTypes } = require("sequelize");
+const { Op } = require('sequelize');
 
+async function getLeaderboard(req, res) {
+    try {
+        const leaderboard = await sequelize.query(
+            `
+                SELECT
+                    u.id,
+                    u.pseudo,
+                    u.description,
 
-async function getLeaderbord(req, res) {
+                    COALESCE(SUM(
+                        CASE
+                            WHEN m.idchoix = p.idchoixgagnant THEN
+                                (
+                                    m.montant / gagnants.total_mise_gagnante
+                                ) * total_pari.total_mise_pari
+                            ELSE 0
+                        END
+                    ), 0) AS total_gagne
 
+                FROM users u
+
+                INNER JOIN mise m ON m.iduser = u.id
+                INNER JOIN pari p ON p.id = m.idpari
+
+                INNER JOIN (
+                    SELECT
+                        idpari,
+                        SUM(montant) AS total_mise_pari
+                    FROM mise
+                    GROUP BY idpari
+                ) total_pari ON total_pari.idpari = p.id
+
+                INNER JOIN (
+                    SELECT
+                        m2.idpari,
+                        SUM(m2.montant) AS total_mise_gagnante
+                    FROM mise m2
+                    INNER JOIN pari p2 ON p2.id = m2.idpari
+                    WHERE m2.idchoix = p2.idchoixgagnant
+                    GROUP BY m2.idpari
+                ) gagnants ON gagnants.idpari = p.id
+
+                WHERE p.idchoixgagnant IS NOT NULL
+                  AND p.datearchivage >= NOW() - INTERVAL '30 days'
+                  AND u.ban = false
+
+                GROUP BY u.id, u.pseudo, u.description
+
+                ORDER BY total_gagne DESC
+
+                LIMIT 10;
+            `,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                leaderboard
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 }
 
 // end-points qui a un effet sur l'utilisateur actuellement connecté
@@ -197,8 +266,140 @@ async function getUserById(req, res) {
 
 async function getUserStatsById(req, res) {
     try {
+        const userExistant = await users.findByPk(req.params.id);
 
-    } catch(error) {
+        if (!userExistant) {
+            return res.status(404).json({
+                success: false,
+                error: "User introuvable"
+            });
+        }
+
+        const stats = await sequelize.query(
+            `
+                SELECT
+                    COALESCE(SUM(m.montant), 0) AS total_mise,
+                    COUNT(m.id) AS nb_mises,
+
+                    COUNT(
+                        CASE 
+                            WHEN p.idchoixgagnant IS NOT NULL 
+                            THEN 1 
+                        END
+                    ) AS nb_mises_resolues,
+
+                    COUNT(
+                        CASE 
+                            WHEN p.idchoixgagnant IS NOT NULL 
+                             AND m.idchoix = p.idchoixgagnant
+                            THEN 1 
+                        END
+                    ) AS nb_mises_gagnees
+                FROM mise m
+                INNER JOIN pari p ON m.idpari = p.id
+                WHERE m.iduser = :idUser;
+            `,
+            {
+                replacements: {
+                    idUser: userExistant.id
+                },
+                type: QueryTypes.SELECT
+            }
+        );
+
+        const stat = stats[0];
+
+        const totalMise = Number(stat.total_mise);
+        const nbMises = Number(stat.nb_mises);
+        const nbMisesResolues = Number(stat.nb_mises_resolues);
+        const nbMisesGagnees = Number(stat.nb_mises_gagnees);
+
+        const tauxReussite = nbMisesResolues === 0
+            ? 0
+            : Number(((nbMisesGagnees / nbMisesResolues) * 100).toFixed(2));
+
+        const misesGagnantes = await sequelize.query(
+            `
+                SELECT 
+                    m.id AS id_mise,
+                    m.idpari,
+                    m.idchoix,
+                    m.montant
+                FROM mise m
+                INNER JOIN pari p ON m.idpari = p.id
+                WHERE m.iduser = :idUser
+                  AND p.idchoixgagnant IS NOT NULL
+                  AND m.idchoix = p.idchoixgagnant;
+            `,
+            {
+                replacements: {
+                    idUser: userExistant.id
+                },
+                type: QueryTypes.SELECT
+            }
+        );
+
+        let totalGagne = 0;
+
+        for (const miseGagnante of misesGagnantes) {
+            const result = await sequelize.query(
+                `
+                    SELECT
+                        COALESCE(SUM(m.montant), 0) AS total_mise_pari,
+
+                        COALESCE(SUM(
+                            CASE 
+                                WHEN m.idchoix = p.idchoixgagnant
+                                THEN m.montant
+                                ELSE 0
+                            END
+                        ), 0) AS total_mise_choix_gagnant
+                    FROM mise m
+                    INNER JOIN pari p ON m.idpari = p.id
+                    WHERE m.idpari = :idPari
+                    GROUP BY p.idchoixgagnant;
+                `,
+                {
+                    replacements: {
+                        idPari: miseGagnante.idpari
+                    },
+                    type: QueryTypes.SELECT
+                }
+            );
+
+            if (result.length > 0) {
+                const totalMisePari = Number(result[0].total_mise_pari);
+                const totalMiseChoixGagnant = Number(result[0].total_mise_choix_gagnant);
+                const montantUser = Number(miseGagnante.montant);
+
+                if (totalMiseChoixGagnant > 0) {
+                    const gain = (montantUser / totalMiseChoixGagnant) * totalMisePari;
+                    totalGagne += gain;
+                }
+            }
+        }
+
+        totalGagne = Number(totalGagne.toFixed(2));
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                user: {
+                    id: userExistant.id,
+                    pseudo: userExistant.pseudo
+                },
+                stats: {
+                    totalMise,
+                    totalGagne,
+                    nbMises,
+                    nbMisesResolues,
+                    nbMisesGagnees,
+                    tauxReussite
+                }
+            }
+        });
+
+    } catch (error) {
         console.error(error);
         return res.status(500).json({
             success: false,
@@ -206,6 +407,7 @@ async function getUserStatsById(req, res) {
         });
     }
 }
+
 
 async function getUserPollsById(req, res) {
     try {
@@ -438,9 +640,73 @@ async function getFollowingById(req, res) {
 }
 
 
+async function searchUsers(req, res) {
+    try {
+        const { q } = req.query;
+
+        if (!q || q.trim() === "") {
+            return res.status(400).json({
+                success: false,
+                error: "Le paramètre q est obligatoire"
+            });
+        }
+
+        const usersFound = await users.findAll({
+            where: {
+                ban: false,
+                [Op.or]: [
+                    {
+                        pseudo: {
+                            [Op.iLike]: `%${q}%`
+                        }
+                    },
+                    {
+                        nom: {
+                            [Op.iLike]: `%${q}%`
+                        }
+                    },
+                    {
+                        prenom: {
+                            [Op.iLike]: `%${q}%`
+                        }
+                    },
+                    {
+                        mail: {
+                            [Op.iLike]: `%${q}%`
+                        }
+                    }
+                ]
+            },
+            attributes: [
+                "id",
+                "pseudo",
+                "nom",
+                "prenom",
+                "description",
+                "mail"
+            ],
+            limit: 20
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                users: usersFound
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
 
 module.exports = {
-    getLeaderbord,
+    getLeaderboard,
     modifyUser,
     getUserBets,
     getUserById,
@@ -451,5 +717,6 @@ module.exports = {
     postFollowUserById,
     deleteFollowUserById,
     getFollowersById,
-    getFollowingById
+    getFollowingById,
+    searchUsers
 };
