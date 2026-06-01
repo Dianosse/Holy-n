@@ -24,11 +24,10 @@
                 <div class="avatar-circle">{{pseudo_initial}}</div>
                 <span class="username">{{pseudo}}</span>
                 <div class="dropdown" id="user-dropdown">
-                    {{! manque une route get /profil }}
-                    <a href="#" class="dropdown-item">Mon profil</a>
+                    <a href="/profile" class="dropdown-item">Mon profil</a>
+                    <a href="/wallet" class="dropdown-item">Mon portefeuille</a>
                     {{#admin}}
-                    {{! manque une route get /admin }}
-                    <a href="#" class="dropdown-item">Administration</a>
+                    <a href="/admin" class="dropdown-item">Administration</a>
                     {{/admin}}
                     <button onclick="logout()" class="dropdown-item dropdown-logout">Se déconnecter</button>
                 </div>

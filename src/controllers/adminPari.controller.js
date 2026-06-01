@@ -90,6 +90,14 @@ async function patchRefusePoll(req, res) {
             });
         }
 
+        const allBets = await mise.findAll({ where: { idpari: poll.id } });
+        for (const bet of allBets) {
+            const bettor = await users.findByPk(bet.iduser);
+            if (bettor) {
+                await bettor.update({ solde: Number(bettor.solde) + Number(bet.montant) });
+            }
+        }
+
         await poll.update({
             approuve : false,
             visible : false,
@@ -100,7 +108,7 @@ async function patchRefusePoll(req, res) {
         return res.status(200).json({
             success : true,
             data : {
-                message : "Pari refusé avec succès"
+                message : "Pari refusé, mises remboursées"
             }
         });
 
@@ -124,14 +132,24 @@ async function patchClosePoll(req, res) {
             });
         }
 
+        const allBets = await mise.findAll({ where: { idpari: poll.id } });
+        for (const bet of allBets) {
+            const bettor = await users.findByPk(bet.iduser);
+            if (bettor) {
+                await bettor.update({ solde: Number(bettor.solde) + Number(bet.montant) });
+            }
+        }
+
         await poll.update({
             actif : false,
+            visible : false,
+            datearchivage : new Date()
         });
 
         return res.status(200).json({
             success : true,
             data : {
-                message : "Pari fermé"
+                message : "Pari fermé, mises remboursées"
             }
         });
 
@@ -183,13 +201,13 @@ async function patchResolvePoll(req, res) {
         await poll.update({
             idchoixgagnant : idChoix,
             actif: false,
-            datearchivage : new Date()
+            dateresolution: new Date()
         });
 
         return res.status(200).json({
             success : true,
             data : {
-                message : "Pari résolu"
+                message : "Pari résolu. Appelez /:id/redistribute pour distribuer les gains."
             }
         });
 
@@ -202,7 +220,6 @@ async function patchResolvePoll(req, res) {
     }
 }
 
-
 async function patchRedistributePoll(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -214,68 +231,54 @@ async function patchRedistributePoll(req, res) {
             });
         }
 
-        if (poll.actif !== false || !poll.datearchivage || !poll.idchoixgagnant) {
+        if (poll.actif !== false || !poll.dateresolution || !poll.idchoixgagnant) {
             return res.status(400).json({
                 success: false,
-                error: "Le pari doit être fermé et résolu avant redistribution"
+                error: "Le pari doit être résolu avant redistribution"
             });
         }
 
-        const allMises = await mise.findAll({
-            where: {
-                idpari: poll.id
-            }
-        });
+        const allMises = await mise.findAll({ where: { idpari: poll.id } });
 
         if (allMises.length === 0) {
             return res.status(200).json({
                 success: true,
-                data: {
-                    message: "Aucune mise sur ce pari, rien à redistribuer"
-                }
+                data: { message: "Aucune mise sur ce pari, rien à redistribuer" }
             });
         }
 
-        const totalMisePari = allMises.reduce((sum, m) => {
-            return sum + Number(m.montant);
-        }, 0);
-
-        const misesGagnantes = allMises.filter(m => {
-            return m.idchoix === poll.idchoixgagnant;
-        });
+        const totalMisePari = allMises.reduce((sum, m) => sum + Number(m.montant), 0);
+        const misesGagnantes = allMises.filter(m => m.idchoix === poll.idchoixgagnant);
+        const totalMiseGagnante = misesGagnantes.reduce((sum, m) => sum + Number(m.montant), 0);
 
         if (misesGagnantes.length === 0) {
+            for (const bet of allMises) {
+                const bettor = await users.findByPk(bet.iduser);
+                if (bettor) {
+                    await bettor.update({ solde: Number(bettor.solde) + Number(bet.montant) });
+                }
+            }
             return res.status(200).json({
                 success: true,
                 data: {
-                    message: "Aucun gagnant pour ce pari",
+                    message: "Aucun parieur sur le choix gagnant, toutes les mises remboursées",
                     totalMisePari
                 }
             });
         }
 
-        const totalMiseGagnante = misesGagnantes.reduce((sum, m) => {
-            return sum + Number(m.montant);
-        }, 0);
-
         for (const miseGagnante of misesGagnantes) {
-            const montantMise = Number(miseGagnante.montant);
-
-            const gain = (montantMise / totalMiseGagnante) * totalMisePari;
-
+            const gain = (Number(miseGagnante.montant) / totalMiseGagnante) * totalMisePari;
             const userGagnant = await users.findByPk(miseGagnante.iduser);
-
             if (userGagnant) {
-                await userGagnant.update({
-                    solde: Number(userGagnant.solde) + gain
-                });
+                await userGagnant.update({ solde: Number(userGagnant.solde) + gain });
             }
         }
 
         return res.status(200).json({
             success: true,
             data: {
-                message: "Argent redistribué aux gagnants",
+                message: "Gains distribués aux gagnants",
                 totalMisePari,
                 totalMiseGagnante,
                 nbGagnants: misesGagnantes.length

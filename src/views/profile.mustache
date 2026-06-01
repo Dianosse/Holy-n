@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holy'n - Mon profil</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    {{> header}}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Mon profil</h1>
+        </div>
+
+        <div class="profile-layout">
+            <div class="profile-avatar-card">
+                <div class="profile-avatar">{{user.pseudo_initial}}</div>
+                <span class="profile-pseudo">{{profileData.pseudo}}</span>
+                <span class="profile-mail">{{profileData.mail}}</span>
+            </div>
+
+            <div class="profile-right">
+                <div class="profile-tabs">
+                    <button class="tab-btn active" onclick="switchTab('info')">Informations</button>
+                    <button class="tab-btn" onclick="switchTab('history')">Historique</button>
+                </div>
+
+                <div id="tab-info" class="tab-panel page-card">
+                    <h2 class="wallet-form-title">Modifier mes informations</h2>
+
+                    <div id="profile-error" class="error-message"></div>
+                    <div id="profile-success" class="success-message"></div>
+
+                    <form onsubmit="saveProfile(event)">
+                        <div class="form-group">
+                            <label class="form-label">Nom</label>
+                            <input type="text" id="profile-nom" class="form-input" value="{{profileData.nom}}" maxlength="32" placeholder="Votre nom">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prénom</label>
+                            <input type="text" id="profile-prenom" class="form-input" value="{{profileData.prenom}}" maxlength="32" placeholder="Votre prénom">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pseudo</label>
+                            <input type="text" id="profile-pseudo" class="form-input" value="{{profileData.pseudo}}" maxlength="32" placeholder="Votre pseudo" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="profile-description" class="form-input form-textarea" maxlength="255" placeholder="Parlez de vous...">{{profileData.description}}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-orange btn-full">Enregistrer</button>
+                    </form>
+                </div>
+
+                <div id="tab-history" class="tab-panel" style="display:none">
+                    {{#noHistorique}}
+                    <div class="empty-state">Vous n'avez pas encore parié.</div>
+                    {{/noHistorique}}
+
+                    {{^noHistorique}}
+                    <div class="historique-table-wrapper">
+                        <table class="historique-table">
+                            <thead>
+                                <tr>
+                                    <th>Pari</th>
+                                    <th>Choix</th>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>État</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#historique}}
+                                <tr>
+                                    <td><a href="/polls/{{poll_id}}" class="historique-link">{{poll_intitule}}</a></td>
+                                    <td class="historique-choix">{{choix_libelle}}</td>
+                                    <td class="historique-date">{{date_str}}</td>
+                                    <td class="historique-montant">{{montant}} €</td>
+                                    <td>
+                                        {{#statut_en_cours}}<span class="badge badge-en-cours">En cours</span>{{/statut_en_cours}}
+                                        {{#statut_termine}}<span class="badge badge-termine">Terminé</span>{{/statut_termine}}
+                                        {{#statut_annule}}<span class="badge badge-annule">Annulé</span>{{/statut_annule}}
+                                    </td>
+                                </tr>
+                                {{/historique}}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{/noHistorique}}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/profile.js"></script>
+
+</body>
+</html>

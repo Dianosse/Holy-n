@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holy'n - Créer un pari</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    {{> header}}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Créer un pari</h1>
+        </div>
+
+        <div class="page-card">
+            <div id="submit-error" class="error-message"></div>
+            <div id="submit-success" class="success-message"></div>
+
+            <form onsubmit="submitPoll(event)">
+                <div class="form-group">
+                    <label class="form-label">Intitulé</label>
+                    <input type="text" name="intitule" class="form-input" placeholder="Question du pari" minlength="3" maxlength="64" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-input form-textarea" placeholder="Décrivez votre pari..." minlength="3" maxlength="255" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Date de clôture</label>
+                    <input type="datetime-local" name="dateCloture" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Choix (2 minimum, 10 maximum)</label>
+                    <div class="choices-container" id="choices-container">
+                        <div class="choice-item">
+                            <input type="text" class="form-input" placeholder="Choix 1" required>
+                        </div>
+                        <div class="choice-item">
+                            <input type="text" class="form-input" placeholder="Choix 2" required>
+                        </div>
+                    </div>
+                    <button type="button" class="add-choice-btn" id="add-choice-btn" onclick="addChoice()">+ Ajouter un choix</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tags existants</label>
+                    <div class="tags-checkboxes">
+                        {{#allTags}}
+                        <input type="checkbox" class="tag-checkbox-item" id="tag-{{id}}" value="{{libelle}}">
+                        <label class="tag-checkbox-label" for="tag-{{id}}">{{libelle}}</label>
+                        {{/allTags}}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Créer un nouveau tag</label>
+                    <div class="form-inline">
+                        <input type="text" id="new-tag-input" class="form-input" placeholder="Nom du tag..." maxlength="32">
+                        <button type="button" class="btn btn-navy" onclick="addCustomTag()">Ajouter</button>
+                    </div>
+                    <div id="custom-tags-container" class="tag-chips" style="margin-top: 10px;"></div>
+                </div>
+
+                <button type="submit" class="btn btn-orange btn-full">Soumettre le pari</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/submit-poll.js"></script>
+
+</body>
+</html>

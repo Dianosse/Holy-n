@@ -308,12 +308,11 @@ async function postSubmitPoll(req, res) {
             });
 
             if(!tagExistant) {
-                return res.status(400).json({
-                    success: false,
-                    error: "Un des tags n'existe pas"
-                });
+                const newTag = await tag.create({ libelle: allTags[i] });
+                allConfirmedTags.push(newTag);
+            } else {
+                allConfirmedTags.push(tagExistant);
             }
-            allConfirmedTags.push(tagExistant);
         }
 
         // gestion des choix

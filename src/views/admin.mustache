@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holy'n - Administration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    {{> header}}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Administration</h1>
+        </div>
+
+        <div id="admin-msg" class="success-message"></div>
+        <div id="admin-error" class="error-message"></div>
+
+        <section class="admin-section">
+            <h2 class="admin-section-title">Paris en attente de validation</h2>
+            {{#pendingPolls}}
+            <div class="admin-card">
+                <div class="admin-card-info">
+                    <p class="admin-card-title">{{intitule}}</p>
+                    <p class="admin-card-desc">{{description}}</p>
+                    <div class="tag-chips">
+                        {{#idtag_tags}}<span class="tag-chip">{{libelle}}</span>{{/idtag_tags}}
+                    </div>
+                </div>
+                <div class="admin-card-actions">
+                    <select class="form-input resolve-select">
+                        <option value="">-- Choisir le gagnant --</option>
+                        {{#idchoix_choixes}}
+                        <option value="{{id}}">{{libelle}}</option>
+                        {{/idchoix_choixes}}
+                    </select>
+                    <button onclick="acceptPoll('{{id}}')" class="btn-sm btn-green">Accepter</button>
+                    <button onclick="refusePoll('{{id}}')" class="btn-sm btn-red">Refuser</button>
+                </div>
+            </div>
+            {{/pendingPolls}}
+            {{^pendingPolls}}
+            <p class="empty-state">Aucun pari en attente</p>
+            {{/pendingPolls}}
+        </section>
+
+        <section class="admin-section">
+            <h2 class="admin-section-title">Paris actifs</h2>
+            {{#activePolls}}
+            <div class="admin-card">
+                <div class="admin-card-info">
+                    <p class="admin-card-title">{{intitule}}</p>
+                    <p class="admin-card-desc">{{description}}</p>
+                    <div class="tag-chips">
+                        {{#idtag_tags}}<span class="tag-chip">{{libelle}}</span>{{/idtag_tags}}
+                    </div>
+                </div>
+                <div class="admin-card-actions">
+                    <select class="form-input resolve-select">
+                        <option value="">-- Choisir le gagnant --</option>
+                        {{#idchoix_choixes}}
+                        <option value="{{id}}">{{libelle}}</option>
+                        {{/idchoix_choixes}}
+                    </select>
+                    <button onclick="resolvePoll('{{id}}', this)" class="btn-sm btn-navy">Résoudre</button>
+                    <button onclick="closePoll('{{id}}')" class="btn-sm btn-red">Fermer</button>
+                </div>
+            </div>
+            {{/activePolls}}
+            {{^activePolls}}
+            <p class="empty-state">Aucun pari actif</p>
+            {{/activePolls}}
+        </section>
+
+        <section class="admin-section">
+            <h2 class="admin-section-title">Utilisateurs</h2>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Pseudo</th>
+                        <th>Mail</th>
+                        <th>Solde</th>
+                        <th>Rôle</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#allUsers}}
+                    <tr>
+                        <td>{{pseudo}}</td>
+                        <td>{{mail}}</td>
+                        <td>{{solde}}€</td>
+                        <td>{{#admin}}<span class="badge badge-admin">Admin</span>{{/admin}}{{^admin}}User{{/admin}}</td>
+                        <td>{{#ban}}<span class="badge badge-banned">Banni</span>{{/ban}}{{^ban}}<span class="badge badge-active">Actif</span>{{/ban}}</td>
+                        <td>
+                            {{#ban}}<button onclick="unbanUser('{{id}}')" class="btn-sm btn-green">Débannir</button>{{/ban}}
+                            {{^ban}}<button onclick="banUser('{{id}}')" class="btn-sm btn-red">Bannir</button>{{/ban}}
+                        </td>
+                    </tr>
+                    {{/allUsers}}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="admin-section">
+            <h2 class="admin-section-title">Tags</h2>
+            <form onsubmit="createTag(event)">
+                <div class="form-inline">
+                    <input type="text" id="new-tag-input" class="form-input" placeholder="Nouveau tag (max 16 caractères)" maxlength="16" required>
+                    <button type="submit" class="btn btn-orange">Créer</button>
+                </div>
+            </form>
+            <div class="tags-cloud" id="tags-container">
+                {{#allTags}}
+                <div class="tag-admin-item" data-id="{{id}}">
+                    <span>{{libelle}}</span>
+                    <button onclick="deleteTag('{{id}}')" class="tag-delete-btn">×</button>
+                </div>
+                {{/allTags}}
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin.js"></script>
+
+</body>
+</html>
