@@ -391,6 +391,22 @@ app.use('/api/admin/tags', adminTagsRoute);
 app.use('/api/admin/users', adminUsersRoute);
 app.use('/api/admin/polls', adminPariRoute);
 
+async function closeExpiredPolls() {
+    try {
+        const [, meta] = await sequelize.query(
+            `UPDATE pari SET actif = false WHERE actif = true AND datecloture < NOW()`,
+            { type: QueryTypes.UPDATE }
+        );
+        const count = meta?.rowCount ?? meta;
+        if (count > 0) console.log(`[cron] ${count} pari(s) expiré(s) fermé(s) automatiquement`);
+    } catch (err) {
+        console.error('[cron] Erreur clôture automatique:', err.message);
+    }
+}
+
+closeExpiredPolls();
+setInterval(closeExpiredPolls, 5 * 60 * 1000);
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

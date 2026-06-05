@@ -411,9 +411,16 @@ async function postBet(req, res) {
         }
 
         if(!poll.actif || !poll.visible || !poll.approuve) {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 error : "Il n'est possible de parier que sur des paris actifs, visibles pour tous et approuvés par un admin"
+            });
+        }
+
+        if(poll.datecloture && new Date(poll.datecloture) < new Date()) {
+            return res.status(400).json({
+                success: false,
+                error : "Les paris sont clôturés pour ce pari"
             });
         }
 
