@@ -1,10 +1,11 @@
+const TAB_NAMES = ['info', 'history', 'friends'];
+
 function switchTab(tab) {
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
     document.getElementById('tab-' + tab).style.display = '';
-    const idx = tab === 'info' ? 0 : 1;
-    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    const idx = TAB_NAMES.indexOf(tab);
+    if (idx !== -1) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
 }
 
 async function saveProfile(e) {
@@ -44,5 +45,105 @@ async function saveProfile(e) {
     } catch {
         errorDiv.textContent = 'Erreur réseau, veuillez réessayer';
         errorDiv.classList.add('show');
+    }
+}
+
+/* ---- Amis ---- */
+
+let searchTimer;
+
+function searchFriends(q) {
+    clearTimeout(searchTimer);
+    const results = document.getElementById('friends-search-results');
+    if (!q.trim()) { results.innerHTML = ''; return; }
+    searchTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`/api/users/search?q=${encodeURIComponent(q.trim())}`);
+            const data = await res.json();
+            const users = (data.data?.users || []).filter(u => u.id !== CURRENT_USER_ID);
+            if (!res.ok || !users.length) {
+                results.innerHTML = '<p class="empty-hint">Aucun utilisateur trouvé.</p>';
+                return;
+            }
+            results.innerHTML = '<div class="following-grid">' +
+                users.map(u => {
+                    const initial = u.pseudo.charAt(0).toUpperCase();
+                    const alreadyFriend = !!document.getElementById('friend-row-' + u.id);
+                    return `<div class="following-card" id="search-row-${u.id}">
+                        <a href="/users/${u.id}" class="following-card-inner">
+                            <div class="avatar-circle avatar-sm">${initial}</div>
+                            <span class="following-pseudo">${u.pseudo}</span>
+                        </a>
+                        ${alreadyFriend
+                            ? '<span class="badge badge-termine">Déjà ami</span>'
+                            : `<button class="btn btn-sm btn-orange" onclick="followFriend('${u.id}','${u.pseudo}',this)">Suivre</button>`
+                        }
+                    </div>`;
+                }).join('') +
+            '</div>';
+        } catch {
+            results.innerHTML = '<p class="empty-hint">Erreur réseau.</p>';
+        }
+    }, 350);
+}
+
+async function followFriend(userId, pseudo, btn) {
+    btn.disabled = true;
+    try {
+        const res = await fetch(`/api/users/${userId}/follow`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Erreur'); btn.disabled = false; return; }
+
+        btn.closest('.following-card').querySelector('button').outerHTML =
+            '<span class="badge badge-termine">Déjà ami</span>';
+
+        const list = document.getElementById('friends-list');
+        const emptyHint = list.querySelector('.empty-hint');
+        if (emptyHint) {
+            list.innerHTML = '<div class="following-grid"></div>';
+        }
+        const grid = list.querySelector('.following-grid');
+        const initial = pseudo.charAt(0).toUpperCase();
+        const div = document.createElement('div');
+        div.className = 'following-card';
+        div.id = 'friend-row-' + userId;
+        div.innerHTML = `<a href="/users/${userId}" class="following-card-inner">
+            <div class="avatar-circle avatar-sm">${initial}</div>
+            <span class="following-pseudo">${pseudo}</span>
+        </a>
+        <button class="btn btn-sm btn-navy" onclick="unfollowFriend('${userId}', this)">Retirer</button>`;
+        grid.appendChild(div);
+    } catch {
+        alert('Erreur réseau');
+        btn.disabled = false;
+    }
+}
+
+async function unfollowFriend(userId, btn) {
+    btn.disabled = true;
+    try {
+        const res = await fetch(`/api/users/${userId}/follow`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Erreur'); btn.disabled = false; return; }
+
+        document.getElementById('friend-row-' + userId)?.remove();
+
+        const searchRow = document.getElementById('search-row-' + userId);
+        if (searchRow) {
+            const oldBtn = searchRow.querySelector('button, .badge');
+            if (oldBtn) {
+                const pseudo = searchRow.querySelector('.following-pseudo')?.textContent || '';
+                oldBtn.outerHTML = `<button class="btn btn-sm btn-orange" onclick="followFriend('${userId}','${pseudo}',this)">Suivre</button>`;
+            }
+        }
+
+        const grid = document.querySelector('#friends-list .following-grid');
+        if (grid && !grid.children.length) {
+            document.getElementById('friends-list').innerHTML =
+                '<p class="empty-hint">Vous ne suivez personne pour l\'instant.</p>';
+        }
+    } catch {
+        alert('Erreur réseau');
+        btn.disabled = false;
     }
 }

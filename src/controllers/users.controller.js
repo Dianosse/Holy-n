@@ -459,6 +459,20 @@ async function postFollowUserById(req, res) {
             });
         }
 
+        if(req.user.admin) {
+            return res.status(403).json({
+                success: false,
+                error : "Les admins ne peuvent pas suivre d'autres utilisateurs"
+            });
+        }
+
+        if(userExistant.admin) {
+            return res.status(403).json({
+                success: false,
+                error : "Impossible de suivre un administrateur"
+            });
+        }
+
         if(userConnecteId === userExistant.id) {
             return res.status(400).json({
                 success: false,
@@ -511,6 +525,13 @@ async function deleteFollowUserById(req, res) {
             return res.status(404).json({
                 success: false,
                 error : "L'user mentionné n'existe pas"
+            });
+        }
+
+        if(req.user.admin) {
+            return res.status(403).json({
+                success: false,
+                error : "Les admins ne peuvent pas gérer des follows"
             });
         }
 
@@ -654,6 +675,7 @@ async function searchUsers(req, res) {
         const usersFound = await users.findAll({
             where: {
                 ban: false,
+                admin: false,
                 [Op.or]: [
                     {
                         pseudo: {

@@ -1355,6 +1355,139 @@ body {
 }
 
 /* ========================
+   USER PUBLIC PROFILE
+======================== */
+.user-profile-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.avatar-lg {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+    margin: 0 auto 16px;
+}
+
+.avatar-sm {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.profile-pseudo {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.profile-fullname {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.profile-description {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.profile-stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.profile-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.profile-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--orange);
+}
+
+.profile-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.following-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.following-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--navy);
+    font-weight: 500;
+    transition: background 0.15s;
+}
+
+.following-card:hover {
+    background: var(--border);
+}
+
+.following-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--navy);
+    flex: 1;
+    min-width: 0;
+}
+
+.following-pseudo {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.empty-hint {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 24px 0;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: var(--radius-btn);
+    flex-shrink: 0;
+}
+
+.friends-search-row {
+    margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+    .user-profile-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================
    RESPONSIVE
 ======================== */
 @media (max-width: 1024px) {

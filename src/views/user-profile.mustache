@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{visited.pseudo}} — Holy'n</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    {{> header}}
+
+    <main class="main-content">
+        <div class="user-profile-layout">
+
+            <!-- Carte gauche : avatar + infos + bouton follow -->
+            <div class="profile-avatar-card">
+                <div class="avatar-circle avatar-lg">{{visited.pseudo_initial}}</div>
+                <h2 class="profile-pseudo">{{visited.pseudo}}</h2>
+                {{#visited.nom}}<p class="profile-fullname">{{visited.nom}} {{visited.prenom}}</p>{{/visited.nom}}
+                {{#visited.description}}
+                <p class="profile-description">{{visited.description}}</p>
+                {{/visited.description}}
+
+                <div class="profile-stats-row">
+                    <div class="profile-stat">
+                        <span class="profile-stat-value">{{nbMises}}</span>
+                        <span class="profile-stat-label">Paris placés</span>
+                    </div>
+                    {{#hasTaux}}
+                    <div class="profile-stat">
+                        <span class="profile-stat-value">{{tauxReussite}}%</span>
+                        <span class="profile-stat-label">Taux de réussite</span>
+                    </div>
+                    {{/hasTaux}}
+                </div>
+
+                {{#canFollow}}
+                <button
+                    id="follow-btn"
+                    class="btn {{#isFollowing}}btn-navy{{/isFollowing}}{{^isFollowing}}btn-orange{{/isFollowing}}"
+                    onclick="toggleFollow('{{visited.id}}', {{#isFollowing}}true{{/isFollowing}}{{^isFollowing}}false{{/isFollowing}})"
+                >
+                    {{#isFollowing}}Ne plus suivre{{/isFollowing}}{{^isFollowing}}Suivre{{/isFollowing}}
+                </button>
+                {{/canFollow}}
+                {{#isOwnProfile}}
+                <a href="/profile" class="btn btn-navy">Modifier mon profil</a>
+                {{/isOwnProfile}}
+            </div>
+
+            <!-- Colonne droite : onglets -->
+            <div class="profile-right">
+                <div class="profile-tabs">
+                    <button class="tab-btn active" onclick="switchTab('history')">Historique des paris</button>
+                    <button class="tab-btn" onclick="switchTab('following')">Abonnements</button>
+                </div>
+
+                <!-- Historique -->
+                <div id="tab-history" class="tab-panel page-card">
+                    {{#noHistorique}}
+                    <p class="empty-hint">Aucun pari effectué pour l'instant.</p>
+                    {{/noHistorique}}
+                    {{^noHistorique}}
+                    <div class="historique-table-wrapper">
+                        <table class="historique-table">
+                            <thead>
+                                <tr>
+                                    <th>Pari</th>
+                                    <th>Choix</th>
+                                    <th>Date</th>
+                                    <th>Mise</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#historique}}
+                                <tr>
+                                    <td><a href="/polls/{{poll_id}}">{{poll_intitule}}</a></td>
+                                    <td>{{choix_libelle}}</td>
+                                    <td>{{date_str}}</td>
+                                    <td>{{montant}} €</td>
+                                    <td>
+                                        {{#statut_en_cours}}<span class="badge badge-en-cours">En cours</span>{{/statut_en_cours}}
+                                        {{#statut_termine}}<span class="badge badge-termine">Terminé</span>{{/statut_termine}}
+                                        {{#statut_annule}}<span class="badge badge-annule">Annulé</span>{{/statut_annule}}
+                                    </td>
+                                </tr>
+                                {{/historique}}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{/noHistorique}}
+                </div>
+
+                <!-- Abonnements -->
+                <div id="tab-following" class="tab-panel page-card" style="display:none;">
+                    {{#noFollowing}}
+                    <p class="empty-hint">{{visited.pseudo}} ne suit personne pour l'instant.</p>
+                    {{/noFollowing}}
+                    {{^noFollowing}}
+                    <div class="following-grid">
+                        {{#following}}
+                        <a href="/users/{{id}}" class="following-card">
+                            <div class="avatar-circle avatar-sm">{{pseudo_initial}}</div>
+                            <span class="following-pseudo">{{pseudo}}</span>
+                        </a>
+                        {{/following}}
+                    </div>
+                    {{/noFollowing}}
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/user-profile.js"></script>
+</body>
+</html>

@@ -27,7 +27,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* models */
-const { users: userModel, tag: tagModel, pari: pariModel, choix: choixModel } = require('./src/models');
+const { users: userModel, tag: tagModel, pari: pariModel, choix: choixModel, amis: amisModel } = require('./src/models');
 const sequelize = require('./src/config/database');
 const { QueryTypes, Op } = require('sequelize');
 
@@ -166,7 +166,7 @@ app.get('/profile', async (req, res) => {
     if (!user) return res.redirect('/login');
 
     try {
-        const [dbUser, rawBets] = await Promise.all([
+        const [dbUser, rawBets, rawAmis] = await Promise.all([
             userModel.findByPk(user.id, {
                 attributes: ['id', 'pseudo', 'nom', 'prenom', 'mail', 'description']
             }),
@@ -179,6 +179,13 @@ app.get('/profile', async (req, res) => {
                  INNER JOIN choix c ON c.id = m.idchoix
                  WHERE m.iduser = :idUser
                  ORDER BY m.datedepari DESC`,
+                { replacements: { idUser: user.id }, type: QueryTypes.SELECT }
+            ),
+            sequelize.query(
+                `SELECT u2.id, u2.pseudo FROM amis a
+                 INNER JOIN users u2 ON a.idamis = u2.id
+                 WHERE a.iduser = :idUser AND u2.admin = false AND u2.ban = false
+                 ORDER BY u2.pseudo ASC`,
                 { replacements: { idUser: user.id }, type: QueryTypes.SELECT }
             )
         ]);
@@ -205,11 +212,18 @@ app.get('/profile', async (req, res) => {
             };
         });
 
+        const amis = rawAmis.map(f => ({
+            ...f,
+            pseudo_initial: f.pseudo.charAt(0).toUpperCase()
+        }));
+
         res.render('profile', {
             user,
             profileData: dbUser.toJSON(),
             historique,
-            noHistorique: historique.length === 0
+            noHistorique: historique.length === 0,
+            amis,
+            noAmis: amis.length === 0
         });
     } catch (err) {
         console.error(err);
@@ -260,6 +274,104 @@ app.get('/admin', async (req, res) => {
             activePolls: activePolls.map(p => p.toJSON()),
             allUsers: allUsers.map(u => u.toJSON()),
             allTags: allTags.map(t => t.toJSON())
+        });
+    } catch (err) {
+        console.error(err);
+        res.redirect('/');
+    }
+});
+
+app.get('/users/:id', async (req, res) => {
+    try {
+        const user = await getSessionUser(req);
+
+        const visited = await userModel.findByPk(req.params.id, {
+            attributes: ['id', 'pseudo', 'nom', 'prenom', 'description', 'admin', 'ban']
+        });
+
+        if (!visited || visited.ban || visited.admin) return res.redirect('/');
+
+        const visitedData = visited.toJSON();
+        const pseudo_initial = visitedData.pseudo.charAt(0).toUpperCase();
+
+        const isOwnProfile = user && user.id === visitedData.id;
+        const canFollow = user && !user.admin && !isOwnProfile;
+
+        let isFollowing = false;
+        if (canFollow) {
+            const rel = await amisModel.findOne({ where: { iduser: user.id, idamis: visitedData.id } });
+            isFollowing = !!rel;
+        }
+
+        const [followingRaw, historyRaw, statsRaw] = await Promise.all([
+            sequelize.query(
+                `SELECT u2.id, u2.pseudo FROM amis a
+                 INNER JOIN users u2 ON a.idamis = u2.id
+                 WHERE a.iduser = :idUser AND u2.admin = false AND u2.ban = false
+                 ORDER BY u2.pseudo ASC`,
+                { replacements: { idUser: visitedData.id }, type: QueryTypes.SELECT }
+            ),
+            sequelize.query(
+                `SELECT m.montant, m.datedepari, m.idpari,
+                        p.intitule, p.datearchivage, p.idchoixgagnant,
+                        c.libelle AS choix_libelle
+                 FROM mise m
+                 INNER JOIN pari p ON p.id = m.idpari
+                 INNER JOIN choix c ON c.id = m.idchoix
+                 WHERE m.iduser = :idUser
+                 ORDER BY m.datedepari DESC`,
+                { replacements: { idUser: visitedData.id }, type: QueryTypes.SELECT }
+            ),
+            sequelize.query(
+                `SELECT COUNT(m.id) AS nb_mises,
+                        COUNT(CASE WHEN p.idchoixgagnant IS NOT NULL AND m.idchoix = p.idchoixgagnant THEN 1 END) AS nb_gagnees,
+                        COUNT(CASE WHEN p.idchoixgagnant IS NOT NULL THEN 1 END) AS nb_resolues
+                 FROM mise m INNER JOIN pari p ON m.idpari = p.id
+                 WHERE m.iduser = :idUser`,
+                { replacements: { idUser: visitedData.id }, type: QueryTypes.SELECT }
+            )
+        ]);
+
+        const stat = statsRaw[0];
+        const nbResolues = Number(stat.nb_resolues);
+        const nbGagnees = Number(stat.nb_gagnees);
+        const tauxReussite = nbResolues === 0 ? null : Math.round((nbGagnees / nbResolues) * 100);
+
+        const historique = historyRaw.map(b => {
+            let statut_en_cours, statut_termine, statut_annule;
+            if (b.idchoixgagnant) { statut_termine = true; }
+            else if (b.datearchivage) { statut_annule = true; }
+            else { statut_en_cours = true; }
+            return {
+                poll_id: b.idpari,
+                poll_intitule: b.intitule,
+                choix_libelle: b.choix_libelle,
+                montant: Number(b.montant).toFixed(2),
+                date_str: new Date(b.datedepari).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }),
+                statut_en_cours: statut_en_cours || null,
+                statut_termine: statut_termine || null,
+                statut_annule: statut_annule || null
+            };
+        });
+
+        const following = followingRaw.map(f => ({
+            ...f,
+            pseudo_initial: f.pseudo.charAt(0).toUpperCase()
+        }));
+
+        res.render('user-profile', {
+            user,
+            visited: { ...visitedData, pseudo_initial },
+            isFollowing,
+            canFollow,
+            isOwnProfile,
+            following,
+            noFollowing: following.length === 0,
+            historique,
+            noHistorique: historique.length === 0,
+            nbMises: Number(stat.nb_mises),
+            tauxReussite,
+            hasTaux: tauxReussite !== null
         });
     } catch (err) {
         console.error(err);
