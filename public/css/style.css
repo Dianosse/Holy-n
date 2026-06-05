@@ -1058,8 +1058,35 @@ body {
 ======================== */
 .polls-header {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.search-result-info {
+    font-size: 14px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-clear {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.search-clear:hover {
+    color: var(--navy);
+    border-color: var(--navy);
 }
 
 /* ========================

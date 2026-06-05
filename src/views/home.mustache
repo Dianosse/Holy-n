@@ -21,11 +21,17 @@
     </nav>
 
     <main class="main-content">
-        {{#user}}
         <div class="polls-header">
+            {{#searchQuery}}
+            <div class="search-result-info">
+                Résultats pour <strong>«&nbsp;{{searchQuery}}&nbsp;»</strong>
+                <a href="/" class="search-clear">✕ Effacer</a>
+            </div>
+            {{/searchQuery}}
+            {{#user}}
             <a href="/polls/submit" class="btn btn-orange">+ Créer un pari</a>
+            {{/user}}
         </div>
-        {{/user}}
 
         <div class="bets-grid">
             {{#paris}}
@@ -50,7 +56,8 @@
             {{/paris}}
             {{^paris}}
             <div class="empty-state" style="grid-column: 1/-1;">
-                <p>Aucun pari actif pour le moment.</p>
+                {{#searchQuery}}<p>Aucun pari ne correspond à «&nbsp;{{searchQuery}}&nbsp;».</p>{{/searchQuery}}
+                {{^searchQuery}}<p>Aucun pari actif pour le moment.</p>{{/searchQuery}}
             </div>
             {{/paris}}
         </div>

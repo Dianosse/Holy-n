@@ -5,8 +5,26 @@
     </a>
     {{^hideSearch}}
     <div class="search-wrapper">
-        <input type="text" class="search-input" placeholder="Rechercher">
+        <input type="text" class="search-input" placeholder="Rechercher un pari...">
     </div>
+    <script>
+    (function () {
+        var input = document.currentScript.previousElementSibling.querySelector('.search-input');
+        if (!input) return;
+        var params = new URLSearchParams(location.search);
+        var q = params.get('search');
+        if (q) input.value = q;
+        input.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            var val = input.value.trim();
+            var url = new URL('/', location.origin);
+            if (val) url.searchParams.set('search', val);
+            var tag = params.get('tag');
+            if (tag) url.searchParams.set('tag', tag);
+            location.href = url.toString();
+        });
+    })();
+    </script>
     {{/hideSearch}}
     <div class="header-actions">
         {{#user}}

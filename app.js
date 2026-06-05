@@ -29,7 +29,7 @@ const PORT = process.env.PORT || 3000;
 /* models */
 const { users: userModel, tag: tagModel, pari: pariModel, choix: choixModel } = require('./src/models');
 const sequelize = require('./src/config/database');
-const { QueryTypes } = require('sequelize');
+const { QueryTypes, Op } = require('sequelize');
 
 /* mustache */
 app.engine('mustache', mustacheExpress(path.join(__dirname, 'src', 'views', 'partials'), '.mustache'));
@@ -81,12 +81,17 @@ async function getSessionUser(req) {
 
 app.get('/', async (req, res) => {
     const user = await getSessionUser(req);
-    const { tag: tagFilter } = req.query;
+    const { tag: tagFilter, search: searchQuery } = req.query;
 
     try {
+        const where = { visible: true, actif: true, approuve: true };
+        if (searchQuery) {
+            where.intitule = { [Op.iLike]: `%${searchQuery.trim()}%` };
+        }
+
         const [rawPolls, allTags] = await Promise.all([
             pariModel.findAll({
-                where: { visible: true, actif: true, approuve: true },
+                where,
                 include: [
                     {
                         model: tagModel,
@@ -139,10 +144,10 @@ app.get('/', async (req, res) => {
             actif: tagFilter === t.libelle
         }));
 
-        res.render('home', { user, paris, tags, noTagSelected: !tagFilter });
+        res.render('home', { user, paris, tags, noTagSelected: !tagFilter, searchQuery: searchQuery || null });
     } catch (err) {
         console.error(err);
-        res.render('home', { user, paris: [], tags: [], noTagSelected: true });
+        res.render('home', { user, paris: [], tags: [], noTagSelected: true, searchQuery: null });
     }
 });
 
