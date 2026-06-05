@@ -307,10 +307,7 @@ async function postSubmitPoll(req, res) {
                 }
             });
 
-            if(!tagExistant) {
-                const newTag = await tag.create({ libelle: allTags[i] });
-                allConfirmedTags.push(newTag);
-            } else {
+            if(tagExistant) {
                 allConfirmedTags.push(tagExistant);
             }
         }

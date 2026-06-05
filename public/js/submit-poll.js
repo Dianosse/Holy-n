@@ -8,7 +8,7 @@ function addChoice() {
     const div = document.createElement('div');
     div.className = 'choice-item';
     div.innerHTML = `
-        <input type="text" class="form-input" placeholder="Choix ${choiceCount}" required>
+        <input type="text" class="form-input" placeholder="Choix ${choiceCount}">
         <button type="button" class="choice-remove-btn" onclick="removeChoice(this)">×</button>
     `;
     container.appendChild(div);
@@ -26,6 +26,7 @@ function removeChoice(btn) {
 
 function addCustomTag() {
     const input = document.getElementById('new-tag-input');
+    if (!input) return;
     const value = input.value.trim();
     if (!value) return;
     if (customTags.includes(value)) { input.value = ''; return; }
@@ -57,22 +58,49 @@ async function submitPoll(e) {
     errorDiv.classList.remove('show');
     successDiv.classList.remove('show');
 
+    const intitule = form.intitule.value.trim();
+    if (!intitule || intitule.length < 3) {
+        errorDiv.textContent = "L'intitulé doit contenir au moins 3 caractères";
+        errorDiv.classList.add('show');
+        return;
+    }
+
+    const description = form.description.value.trim();
+    if (!description || description.length < 3) {
+        errorDiv.textContent = 'La description doit contenir au moins 3 caractères';
+        errorDiv.classList.add('show');
+        return;
+    }
+
+    const dateCloture = form.dateCloture.value;
+    if (!dateCloture) {
+        errorDiv.textContent = 'La date de clôture est obligatoire';
+        errorDiv.classList.add('show');
+        return;
+    }
+    const dateClotureObj = new Date(dateCloture);
+    if (isNaN(dateClotureObj.getTime()) || dateClotureObj <= new Date()) {
+        errorDiv.textContent = 'La date de clôture doit être dans le futur';
+        errorDiv.classList.add('show');
+        return;
+    }
+
     const allChoix = Array.from(document.querySelectorAll('#choices-container .choice-item input'))
         .map(i => ({ libelle: i.value.trim() }))
         .filter(c => c.libelle.length > 0);
+
+    if (allChoix.length < 2) {
+        errorDiv.textContent = 'Le pari doit avoir au moins 2 choix';
+        errorDiv.classList.add('show');
+        return;
+    }
 
     const allTags = [
         ...Array.from(document.querySelectorAll('.tag-checkbox-item:checked')).map(cb => cb.value),
         ...customTags
     ];
 
-    const body = {
-        intitule: form.intitule.value.trim(),
-        description: form.description.value.trim(),
-        dateCloture: new Date(form.dateCloture.value).toISOString(),
-        allChoix,
-        allTags
-    };
+    const body = { intitule, description, dateCloture: dateClotureObj.toISOString(), allChoix, allTags };
 
     try {
         const res = await fetch('/api/polls/submit', {
@@ -89,6 +117,9 @@ async function submitPoll(e) {
             document.querySelectorAll('#choices-container .choice-item .choice-remove-btn').forEach(b => b.closest('.choice-item').remove());
             choiceCount = 2;
             document.getElementById('add-choice-btn').style.display = '';
+            customTags.length = 0;
+            const container = document.getElementById('custom-tags-container');
+            if (container) container.innerHTML = '';
         } else {
             errorDiv.textContent = data.error || 'Erreur lors de la soumission';
             errorDiv.classList.add('show');

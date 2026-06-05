@@ -22,37 +22,37 @@
             <div id="submit-error" class="error-message"></div>
             <div id="submit-success" class="success-message"></div>
 
-            <form onsubmit="submitPoll(event)">
+            <form onsubmit="submitPoll(event)" novalidate>
                 <div class="form-group">
                     <label class="form-label">Intitulé</label>
-                    <input type="text" name="intitule" class="form-input" placeholder="Question du pari" minlength="3" maxlength="64" required>
+                    <input type="text" name="intitule" class="form-input" placeholder="Question du pari" maxlength="64">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Description</label>
-                    <textarea name="description" class="form-input form-textarea" placeholder="Décrivez votre pari..." minlength="3" maxlength="255" required></textarea>
+                    <textarea name="description" class="form-input form-textarea" placeholder="Décrivez votre pari..." maxlength="255"></textarea>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Date de clôture</label>
-                    <input type="datetime-local" name="dateCloture" class="form-input" required>
+                    <input type="datetime-local" name="dateCloture" class="form-input">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Choix (2 minimum, 10 maximum)</label>
                     <div class="choices-container" id="choices-container">
                         <div class="choice-item">
-                            <input type="text" class="form-input" placeholder="Choix 1" required>
+                            <input type="text" class="form-input" placeholder="Choix 1">
                         </div>
                         <div class="choice-item">
-                            <input type="text" class="form-input" placeholder="Choix 2" required>
+                            <input type="text" class="form-input" placeholder="Choix 2">
                         </div>
                     </div>
                     <button type="button" class="add-choice-btn" id="add-choice-btn" onclick="addChoice()">+ Ajouter un choix</button>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tags existants</label>
+                    <label class="form-label">Tags</label>
                     <div class="tags-checkboxes">
                         {{#allTags}}
                         <input type="checkbox" class="tag-checkbox-item" id="tag-{{id}}" value="{{libelle}}">
@@ -61,6 +61,7 @@
                     </div>
                 </div>
 
+                {{#user.admin}}
                 <div class="form-group">
                     <label class="form-label">Créer un nouveau tag</label>
                     <div class="form-inline">
@@ -69,6 +70,7 @@
                     </div>
                     <div id="custom-tags-container" class="tag-chips" style="margin-top: 10px;"></div>
                 </div>
+                {{/user.admin}}
 
                 <button type="submit" class="btn btn-orange btn-full">Soumettre le pari</button>
             </form>
