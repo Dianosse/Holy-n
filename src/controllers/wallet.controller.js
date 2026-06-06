@@ -2,6 +2,10 @@ const { users } = require('../models');
 const sequelize = require("../config/database");
 const { QueryTypes } = require("sequelize");
 
+
+/**
+ * Retourne le solde de l'utilisateur actuellement connecté et le total d'argent qu'il a actuellement misé.
+ */
 async function getPersonnalWallet(req, res) {
     try{
         const userConnecte = await users.findByPk(req.user.id);
@@ -44,6 +48,14 @@ async function getPersonnalWallet(req, res) {
 }
 
 
+/**
+ * Ajoute au solde de l'utilisateur connecté le montant envoyé depuis le front.
+ * @Condition : argent doit être un nombre positif.
+ * Exemple de body :
+ * {
+ *     "argent" : 12345
+ * }
+ */
 async function postDepositMoney(req, res) {
     try {
         const userConnecte = await users.findByPk(req.user.id);
@@ -104,6 +116,17 @@ async function postDepositMoney(req, res) {
     }
 }
 
+
+/**
+ * Retire au solde de l'utilisateur connecté le montant envoyé depuis le front.
+ * @Conditions :
+ *  - argent doit être un nombre positif.
+ *  - Le solde de l'utilisateur ne doit pas tomber en négatif
+ * Exemple de body :
+ * {
+ *     "argent" : "114114"
+ * }
+ */
 async function postWithdrawMoney(req, res) {
     try {
         const userConnecte = await users.findByPk(req.user.id);

@@ -3,6 +3,11 @@ const sequelize = require("../config/database");
 const { QueryTypes } = require("sequelize");
 const { Op } = require('sequelize');
 
+
+/**
+ * Retourne le classement des 10 utilisateurs ayant gagné le plus d'argent
+ * sur les paris résolus durant les 30 derniers jours.
+ */
 async function getLeaderboard(req, res) {
     try {
         const leaderboard = await sequelize.query(
@@ -76,8 +81,10 @@ async function getLeaderboard(req, res) {
     }
 }
 
-// end-points qui a un effet sur l'utilisateur actuellement connecté
-
+/**
+ * Modifie les informations du profil de l'utilisateur connecté.
+ * @Condition : les champs fournis doivent respecter les formats attendus.
+ */
 async function modifyUser(req, res) {
     try {
         const user = await users.findByPk(req.user.id);
@@ -161,6 +168,10 @@ async function modifyUser(req, res) {
     }
 }
 
+
+/**
+ * Retourne toutes les mises de l'utilisateur actuellement connecté.
+ */
 async function getUserBets(req, res) {
     try {
         const userBets = await mise.findAll({
@@ -184,6 +195,10 @@ async function getUserBets(req, res) {
     }
 }
 
+
+/**
+ * Retourne tous les paris créés par l'utilisateur actuellement connecté.
+ */
 async function getUserPolls(req, res) {
     try {
         const userPolls = await pari.findAll({
@@ -207,6 +222,10 @@ async function getUserPolls(req, res) {
     }
 }
 
+
+/**
+ * Supprime le compte de l'utilisateur actuellement connecté.
+ */
 async function deleteUser(req, res) {
     try {
         const user = await users.findByPk(req.user.id);
@@ -226,8 +245,11 @@ async function deleteUser(req, res) {
     }
 }
 
-// end-points qui a un effet sur n'importe quel user via l'ID
 
+/**
+ * Retourne les informations publiques d'un utilisateur à partir de son ID.
+ * @Condition : l'ID fourni doit correspondre à un utilisateur existant.
+ */
 async function getUserById(req, res) {
     try {
         const id = req.params.id;
@@ -264,6 +286,12 @@ async function getUserById(req, res) {
     }
 }
 
+
+/**
+ * Retourne les statistiques d'un utilisateur.
+ * Les statistiques comprennent le total misé, le total gagné et le taux de réussite.
+ * @Condition : l'ID fourni doit correspondre à un utilisateur existant.
+ */
 async function getUserStatsById(req, res) {
     try {
         const userExistant = await users.findByPk(req.params.id);
@@ -409,6 +437,10 @@ async function getUserStatsById(req, res) {
 }
 
 
+/**
+ * Retourne tous les paris créés par un utilisateur à partir de son ID.
+ * @Condition : l'ID fourni doit correspondre à un utilisateur existant.
+ */
 async function getUserPollsById(req, res) {
     try {
         const id = req.params.id;
@@ -444,8 +476,10 @@ async function getUserPollsById(req, res) {
 }
 
 /**
+ * Permet à l'utilisateur connecté de suivre un autre utilisateur.
  * idUser = la personne qui suit
  * idAmis = la personne suivie
+ * @Condition : l'utilisateur suivi doit exister et ne doit pas déjà être suivi.
  */
 async function postFollowUserById(req, res) {
     try {
@@ -516,6 +550,11 @@ async function postFollowUserById(req, res) {
     }
 }
 
+
+/**
+ * Permet à l'utilisateur connecté d'arrêter de suivre un utilisateur.
+ * @Condition : l'utilisateur doit exister et être suivi par l'utilisateur connecté.
+ */
 async function deleteFollowUserById(req, res) {
     try {
         const userConnecteId = req.user.id;
@@ -568,8 +607,10 @@ async function deleteFollowUserById(req, res) {
     }
 }
 
+
 /**
- * Retourne les users qui suivent l'user qui a l'id :id
+ * Retourne les utilisateurs qui suivent l'utilisateur dont l'ID est fourni.
+ * @Condition : l'ID fourni doit correspondre à un utilisateur existant.
  */
 async function getFollowersById(req, res) {
     try {
@@ -614,8 +655,10 @@ async function getFollowersById(req, res) {
     }
 }
 
+
 /**
- * Retourne les users que :id follow
+ * Retourne les utilisateurs suivis par l'utilisateur dont l'ID est fourni.
+ * @Condition : l'ID fourni doit correspondre à un utilisateur existant.
  */
 async function getFollowingById(req, res) {
     try {
@@ -661,6 +704,11 @@ async function getFollowingById(req, res) {
 }
 
 
+/**
+ * Recherche des utilisateurs non bannis et non administrateurs.
+ * La recherche se fait sur le pseudo, le nom, le prénom et le mail.
+ * @Condition : le paramètre q doit être fourni.
+ */
 async function searchUsers(req, res) {
     try {
         const { q } = req.query;

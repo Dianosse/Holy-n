@@ -1,6 +1,9 @@
-const { tag, users } = require('../models');
+const { tag } = require('../models');
 
 /**
+ * Permet aux admins de créer de nouveaux tags.
+ * @Condition : Aucun tag déjà présent en BD ne doit comporter ce libelle.
+ * Exemple de body :
  * {
  *     "libelle" : "films"
  * }
@@ -43,6 +46,10 @@ async function postCreateTag(req, res) {
     }
 }
 
+
+/**
+ * Permet la suppression d'un tag existant en BD.
+ */
 async function deleteTagById(req, res) {
     try{
         const tagExistant = await tag.findByPk(req.params.id);
@@ -63,7 +70,6 @@ async function deleteTagById(req, res) {
                 error : "Tag supprimé avec succès"
             }
         });
-
 
     } catch(error) {
         console.error(error);
