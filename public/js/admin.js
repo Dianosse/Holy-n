@@ -41,9 +41,13 @@ async function resolvePoll(id, btn) {
     const idChoix = select.value;
     if (!idChoix) return showMsg('Sélectionne un choix gagnant avant de résoudre', true);
 
+    btn.disabled = true;
     const { ok, data } = await adminFetch(`/api/admin/polls/${id}/resolve`, 'PATCH', { idChoix });
-    if (ok) { showMsg('Pari résolu'); location.reload(); }
-    else showMsg(data.error || 'Erreur', true);
+    if (!ok) { btn.disabled = false; return showMsg(data.error || 'Erreur', true); }
+
+    const { ok: ok2, data: data2 } = await adminFetch(`/api/admin/polls/${id}/redistribute`, 'PATCH');
+    if (ok2) { showMsg('Pari résolu et gains distribués'); location.reload(); }
+    else { btn.disabled = false; showMsg(data2.error || 'Erreur lors de la distribution', true); }
 }
 
 async function banUser(id) {

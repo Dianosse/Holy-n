@@ -633,6 +633,81 @@ async function getQuoteAllChoicesById(req, res) {
     }
 }
 
+async function getChartData(req, res) {
+    try {
+        const { id } = req.params;
+
+        const poll = await pari.findByPk(id, {
+            include: [{ model: choix, as: 'idchoix_choixes', through: { attributes: [] } }]
+        });
+        if (!poll) return res.status(404).json({ success: false, error: 'Pari introuvable' });
+
+        const allChoix = poll.idchoix_choixes || [];
+        if (allChoix.length === 0) {
+            return res.status(200).json({ success: true, data: { isEmpty: true } });
+        }
+
+        // Une ligne par mise individuelle, ordonnée chronologiquement
+        const bets = await sequelize.query(
+            `SELECT m.datedepari, m.idchoix, m.montant
+             FROM mise m
+             WHERE m.idpari = :idPari
+             ORDER BY m.datedepari ASC`,
+            { replacements: { idPari: id }, type: QueryTypes.SELECT }
+        );
+
+        if (bets.length === 0) {
+            return res.status(200).json({ success: true, data: { isEmpty: true } });
+        }
+
+        const choiceIds = allChoix.map(c => c.id);
+        const choiceLabels = {};
+        allChoix.forEach(c => { choiceLabels[c.id] = c.libelle; });
+
+        const cumulatives = {};
+        choiceIds.forEach(cid => { cumulatives[cid] = 0; });
+        const seriesData = {};
+        choiceIds.forEach(cid => { seriesData[cid] = []; });
+        const labels = [];
+
+        const fmt = d => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+
+        // Point 0 : date de création du pari, toutes les probabilités à 0%
+        labels.push(fmt(poll.datecreation));
+        choiceIds.forEach(cid => seriesData[cid].push(0));
+
+        // Un point par mise — chaque saut de probabilité est visible
+        for (const bet of bets) {
+            cumulatives[bet.idchoix] += Number(bet.montant);
+            const total = choiceIds.reduce((sum, cid) => sum + cumulatives[cid], 0);
+            labels.push(fmt(bet.datedepari));
+            choiceIds.forEach(cid => {
+                seriesData[cid].push(Math.round((cumulatives[cid] / total) * 1000) / 10);
+            });
+        }
+
+        // Dernier point : aujourd'hui (état actuel, ligne plate depuis la dernière mise)
+        const lastBet = new Date(bets[bets.length - 1].datedepari);
+        const today = new Date();
+        if (lastBet.toDateString() !== today.toDateString()) {
+            labels.push(fmt(today));
+            choiceIds.forEach(cid => seriesData[cid].push(seriesData[cid][seriesData[cid].length - 1]));
+        }
+
+        const series = choiceIds.map(cid => ({
+            id: cid,
+            label: choiceLabels[cid],
+            data: seriesData[cid]
+        }));
+
+        return res.status(200).json({ success: true, data: { labels, series, isEmpty: false } });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+}
+
 module.exports = {
     getAllPolls,
     getPollById,
@@ -641,5 +716,6 @@ module.exports = {
     postSubmitPoll,
     postBet,
     getBets,
-    getQuoteAllChoicesById
+    getQuoteAllChoicesById,
+    getChartData
 };

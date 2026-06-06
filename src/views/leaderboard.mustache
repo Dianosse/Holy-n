@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard — Holy'n</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    {{> header}}
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Leaderboard</h1>
+                <p class="page-subtitle">Meilleurs parieurs de {{moisNom}}</p>
+            </div>
+        </div>
+
+        {{#noPlayers}}
+        <div class="empty-state">
+            <p>Aucun pari résolu ce mois-ci pour l'instant.</p>
+        </div>
+        {{/noPlayers}}
+
+        {{^noPlayers}}
+
+        <!-- Podium top 3 -->
+        <div class="leaderboard-podium">
+            {{#players}}
+            {{#is_second}}
+            <a href="/users/{{id}}" class="podium-card podium-2">
+                <div class="podium-rank">2</div>
+                <div class="avatar-circle avatar-lg">{{pseudo_initial}}</div>
+                <span class="podium-pseudo">{{pseudo}}</span>
+                <span class="podium-gain">{{total_gagne}} €</span>
+                <div class="podium-base podium-base-2"></div>
+            </a>
+            {{/is_second}}
+            {{/players}}
+
+            {{#players}}
+            {{#is_first}}
+            <a href="/users/{{id}}" class="podium-card podium-1">
+                <div class="podium-crown">🏆</div>
+                <div class="podium-rank">1</div>
+                <div class="avatar-circle avatar-lg">{{pseudo_initial}}</div>
+                <span class="podium-pseudo">{{pseudo}}</span>
+                <span class="podium-gain">{{total_gagne}} €</span>
+                <div class="podium-base podium-base-1"></div>
+            </a>
+            {{/is_first}}
+            {{/players}}
+
+            {{#players}}
+            {{#is_third}}
+            <a href="/users/{{id}}" class="podium-card podium-3">
+                <div class="podium-rank">3</div>
+                <div class="avatar-circle avatar-lg">{{pseudo_initial}}</div>
+                <span class="podium-pseudo">{{pseudo}}</span>
+                <span class="podium-gain">{{total_gagne}} €</span>
+                <div class="podium-base podium-base-3"></div>
+            </a>
+            {{/is_third}}
+            {{/players}}
+        </div>
+
+        <!-- Classement complet -->
+        <div class="page-card leaderboard-table-card">
+            <table class="historique-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Joueur</th>
+                        <th>Gains du mois</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#players}}
+                    <tr class="{{#is_first}}leaderboard-row-gold{{/is_first}}{{#is_second}}leaderboard-row-silver{{/is_second}}{{#is_third}}leaderboard-row-bronze{{/is_third}}">
+                        <td class="leaderboard-rank-cell">
+                            {{#is_first}}<span class="rank-medal gold">1</span>{{/is_first}}
+                            {{#is_second}}<span class="rank-medal silver">2</span>{{/is_second}}
+                            {{#is_third}}<span class="rank-medal bronze">3</span>{{/is_third}}
+                            {{^is_first}}{{^is_second}}{{^is_third}}<span class="rank-number">{{rank}}</span>{{/is_third}}{{/is_second}}{{/is_first}}
+                        </td>
+                        <td>
+                            <a href="/users/{{id}}" class="leaderboard-player">
+                                <div class="avatar-circle avatar-sm">{{pseudo_initial}}</div>
+                                <span>{{pseudo}}</span>
+                            </a>
+                        </td>
+                        <td class="leaderboard-gain">{{total_gagne}} €</td>
+                    </tr>
+                    {{/players}}
+                </tbody>
+            </table>
+        </div>
+
+        {{/noPlayers}}
+    </main>
+
+    <script src="/js/auth.js"></script>
+</body>
+</html>

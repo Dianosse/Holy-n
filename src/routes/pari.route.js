@@ -3,18 +3,20 @@ const protect = require("../middlewares/auth");
 
 const router = require('express').Router();
 
-router.route('/').get(pariController.getAllPolls);                                  // ---> fait
+router.route('/').get(pariController.getAllPolls);
 
-router.route('/:id').get(pariController.getPollById)                                // ---> fait
-                            .delete(protect, pariController.deletePollById);              // ---> fait
+router.route('/:id').get(pariController.getPollById)
+                    .delete(protect, pariController.deletePollById);
 
-router.route('/tags').get(pariController.getAllTags);                               // ---> fait
+router.route('/tags').get(pariController.getAllTags);
 
-router.route('/:id/bets').post(protect, pariController.postBet)                     // ---> fait
-                                .get(pariController.getBets);                             // ---> fait
+router.route('/:id/bets').post(protect, pariController.postBet)
+                          .get(pariController.getBets);
 
-router.route('/submit').post(protect, pariController.postSubmitPoll);               // ---> fait
+router.route('/submit').post(protect, pariController.postSubmitPoll);
 
-router.route('/:id/quotes').get(pariController.getQuoteAllChoicesById);             // ---> fait
+router.route('/:id/quotes').get(pariController.getQuoteAllChoicesById);
+
+router.route('/:id/chart-data').get(pariController.getChartData);
 
 module.exports = router;

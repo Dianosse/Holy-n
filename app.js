@@ -57,9 +57,18 @@ app.use(session({
 async function getSessionUser(req) {
     if (!req.session?.user) return null;
     try {
-        const dbUser = await userModel.findByPk(req.session.user.id, {
-            attributes: ['id', 'pseudo', 'admin', 'solde', 'ban']
-        });
+        const [dbUser, volumeRaw] = await Promise.all([
+            userModel.findByPk(req.session.user.id, {
+                attributes: ['id', 'pseudo', 'admin', 'solde', 'ban']
+            }),
+            sequelize.query(
+                `SELECT COALESCE(SUM(m.montant), 0) AS volume
+                 FROM mise m
+                 INNER JOIN pari p ON p.id = m.idpari
+                 WHERE m.iduser = :idUser AND p.actif = true AND p.idchoixgagnant IS NULL`,
+                { replacements: { idUser: req.session.user.id }, type: QueryTypes.SELECT }
+            )
+        ]);
         if (!dbUser || dbUser.ban) {
             req.session.destroy(() => {});
             return null;
@@ -69,7 +78,8 @@ async function getSessionUser(req) {
             pseudo: dbUser.pseudo,
             pseudo_initial: dbUser.pseudo.charAt(0).toUpperCase(),
             admin: dbUser.admin || undefined,
-            solde: Number(dbUser.solde).toFixed(2)
+            solde: Number(dbUser.solde).toFixed(2),
+            volume: Number(volumeRaw[0]?.volume || 0).toFixed(2)
         };
     } catch (err) {
         console.error(err);
@@ -148,6 +158,63 @@ app.get('/', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.render('home', { user, paris: [], tags: [], noTagSelected: true, searchQuery: null });
+    }
+});
+
+app.get('/leaderboard', async (req, res) => {
+    const user = await getSessionUser(req);
+    try {
+        const rows = await sequelize.query(
+            `SELECT
+                u.id,
+                u.pseudo,
+                COALESCE(SUM(
+                    CASE
+                        WHEN m.idchoix = p.idchoixgagnant THEN
+                            (m.montant / gagnants.total_mise_gagnante) * total_pari.total_mise_pari
+                        ELSE 0
+                    END
+                ), 0) AS total_gagne
+             FROM users u
+             INNER JOIN mise m ON m.iduser = u.id
+             INNER JOIN pari p ON p.id = m.idpari
+             INNER JOIN (
+                 SELECT idpari, SUM(montant) AS total_mise_pari FROM mise GROUP BY idpari
+             ) total_pari ON total_pari.idpari = p.id
+             INNER JOIN (
+                 SELECT m2.idpari, SUM(m2.montant) AS total_mise_gagnante
+                 FROM mise m2
+                 INNER JOIN pari p2 ON p2.id = m2.idpari
+                 WHERE m2.idchoix = p2.idchoixgagnant
+                 GROUP BY m2.idpari
+             ) gagnants ON gagnants.idpari = p.id
+             WHERE p.idchoixgagnant IS NOT NULL
+               AND DATE_TRUNC('month', p.datearchivage) = DATE_TRUNC('month', NOW())
+               AND u.ban = false
+               AND u.admin = false
+             GROUP BY u.id, u.pseudo
+             ORDER BY total_gagne DESC
+             LIMIT 10`,
+            { type: QueryTypes.SELECT }
+        );
+
+        const moisNom = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+        const players = rows.map((r, i) => ({
+            rank: i + 1,
+            id: r.id,
+            pseudo: r.pseudo,
+            pseudo_initial: r.pseudo.charAt(0).toUpperCase(),
+            total_gagne: Number(r.total_gagne).toFixed(2),
+            is_first: i === 0,
+            is_second: i === 1,
+            is_third: i === 2
+        }));
+
+        res.render('leaderboard', { user, players, noPlayers: players.length === 0, moisNom });
+    } catch (err) {
+        console.error(err);
+        res.render('leaderboard', { user, players: [], noPlayers: true, moisNom: '' });
     }
 });
 
@@ -261,17 +328,32 @@ app.get('/admin', async (req, res) => {
             { model: tagModel, as: 'idtag_tags', attributes: ['id', 'libelle'], through: { attributes: [] } }
         ];
 
-        const [pendingPolls, activePolls, allUsers, allTags] = await Promise.all([
+        const now = new Date();
+
+        const [pendingPolls, activePolls, closedPolls, allUsers, allTags] = await Promise.all([
             pariModel.findAll({ where: { approuve: false, datearchivage: null }, include: includeChoixTag }),
             pariModel.findAll({ where: { approuve: true, actif: true }, include: includeChoixTag }),
+            pariModel.findAll({ where: { approuve: true, actif: false, idchoixgagnant: null, datearchivage: null }, include: includeChoixTag }),
             userModel.findAll({ attributes: ['id', 'admin', 'nom', 'prenom', 'pseudo', 'ban', 'mail', 'solde'] }),
             tagModel.findAll({ attributes: ['id', 'libelle'] })
         ]);
 
+        const formatPoll = p => {
+            const poll = p.toJSON();
+            if (poll.datecloture) {
+                poll.datecloture_str = new Date(poll.datecloture).toLocaleDateString('fr-FR', {
+                    day: '2-digit', month: 'long', year: 'numeric'
+                });
+            }
+            return poll;
+        };
+
         res.render('admin', {
             user,
-            pendingPolls: pendingPolls.map(p => p.toJSON()),
-            activePolls: activePolls.map(p => p.toJSON()),
+            pendingPolls: pendingPolls.map(formatPoll),
+            activePolls: activePolls.map(formatPoll),
+            closedPolls: closedPolls.map(formatPoll),
+            noClosedPolls: closedPolls.length === 0,
             allUsers: allUsers.map(u => u.toJSON()),
             allTags: allTags.map(t => t.toJSON())
         });
@@ -448,10 +530,14 @@ app.get('/polls/:id', async (req, res) => {
                 quote = Number((totalVolumeChoix / totalMise).toFixed(2));
             }
             const userMise = userBets[c.id] != null ? Number(userBets[c.id]).toFixed(2) : null;
+            const proba_pct = totalVolumeChoix === 0
+                ? Math.round(100 / nbChoix)
+                : Math.round((totalMise / totalVolumeChoix) * 100);
             return {
                 ...c,
                 totalMise: totalMise.toFixed(2),
                 quote_str: quote !== null ? `x${quote}` : '-',
+                proba_pct,
                 userMise
             };
         });

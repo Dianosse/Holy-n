@@ -18,39 +18,77 @@
             <h1 class="page-title">Mon portefeuille</h1>
         </div>
 
-        <div class="wallet-stats">
-            <div class="wallet-stat-card">
-                <span class="wallet-stat-label">Solde disponible</span>
-                <span class="wallet-stat-value orange" id="solde-display">{{solde}}€</span>
-            </div>
-            <div class="wallet-stat-card">
-                <span class="wallet-stat-label">Mises en cours</span>
-                <span class="wallet-stat-value">{{totalMise}}€</span>
+        <div id="wallet-msg" class="success-message"></div>
+        <div id="wallet-error" class="error-message"></div>
+
+        <div class="balance-card">
+            <div class="balance-card-inner">
+                <div class="balance-top">
+                    <span class="balance-label">Solde disponible</span>
+                    <span class="balance-brand">Holy'n</span>
+                </div>
+                <div class="balance-amount" id="solde-display">{{user.solde}}€</div>
+                <div class="balance-footer">
+                    <div class="balance-stat">
+                        <span class="balance-sub-label">Mises en cours</span>
+                        <span class="balance-sub-value" id="mises-display">{{totalMise}}€</span>
+                    </div>
+                    <div class="balance-stat">
+                        <span class="balance-sub-label">Compte</span>
+                        <span class="balance-sub-value">{{user.pseudo}}</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="wallet-forms">
-            <div class="wallet-form-card">
-                <h2 class="wallet-form-title">Déposer des fonds</h2>
-                <div id="deposit-error" class="error-message"></div>
-                <div id="deposit-success" class="success-message"></div>
+            <div class="wallet-form-card wallet-deposit">
+                <div class="wallet-form-header">
+                    <svg class="wallet-form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 19V5M5 12l7-7 7 7"/>
+                    </svg>
+                    <h2 class="wallet-form-title">Déposer des fonds</h2>
+                </div>
+                <div class="quick-amounts">
+                    <button type="button" class="quick-btn" onclick="setAmount('deposit', 5)">5€</button>
+                    <button type="button" class="quick-btn" onclick="setAmount('deposit', 10)">10€</button>
+                    <button type="button" class="quick-btn" onclick="setAmount('deposit', 20)">20€</button>
+                    <button type="button" class="quick-btn" onclick="setAmount('deposit', 50)">50€</button>
+                    <button type="button" class="quick-btn" onclick="setAmount('deposit', 100)">100€</button>
+                </div>
                 <form onsubmit="deposit(event)">
                     <div class="form-group">
                         <label class="form-label">Montant (€)</label>
-                        <input type="number" name="argent" class="form-input" placeholder="0.00" min="0.01" step="0.01" required>
+                        <div class="input-prefix-wrap">
+                            <span class="input-prefix">€</span>
+                            <input id="deposit-input" type="number" name="argent" class="form-input with-prefix" placeholder="0.00" min="0.01" step="0.01" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-orange btn-full">Déposer</button>
                 </form>
             </div>
 
-            <div class="wallet-form-card">
-                <h2 class="wallet-form-title">Retirer des fonds</h2>
-                <div id="withdraw-error" class="error-message"></div>
-                <div id="withdraw-success" class="success-message"></div>
+            <div class="wallet-form-card wallet-withdraw">
+                <div class="wallet-form-header">
+                    <svg class="wallet-form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M19 12l-7 7-7-7"/>
+                    </svg>
+                    <h2 class="wallet-form-title">Retirer des fonds</h2>
+                </div>
+                <div class="quick-amounts">
+                    <button type="button" class="quick-btn" onclick="setAmount('withdraw', 5)">5€</button>
+                    <button type="button" class="quick-btn" onclick="setAmount('withdraw', 10)">10€</button>
+                    <button type="button" class="quick-btn" onclick="setAmount('withdraw', 20)">20€</button>
+                    <button type="button" class="quick-btn" onclick="setAmount('withdraw', 50)">50€</button>
+                    <button type="button" class="quick-btn quick-btn-max" onclick="setMax()">MAX</button>
+                </div>
                 <form onsubmit="withdraw(event)">
                     <div class="form-group">
                         <label class="form-label">Montant (€)</label>
-                        <input type="number" name="argent" class="form-input" placeholder="0.00" min="0.01" step="0.01" required>
+                        <div class="input-prefix-wrap">
+                            <span class="input-prefix">€</span>
+                            <input id="withdraw-input" type="number" name="argent" class="form-input with-prefix" placeholder="0.00" min="0.01" step="0.01" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-navy btn-full">Retirer</button>
                 </form>
@@ -58,6 +96,7 @@
         </div>
     </main>
 
+    <script>var WALLET_SOLDE = {{user.solde}};</script>
     <script src="/js/auth.js"></script>
     <script src="/js/wallet.js"></script>
 

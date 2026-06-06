@@ -31,8 +31,7 @@
         <div class="user-info">
             <div class="user-stat">
                 <span class="stat-label">Volume</span>
-                {{! -manque une route get /stats/user/:id }}
-                <span class="stat-value">—</span>
+                <span class="stat-value">{{volume}}€</span>
             </div>
             <div class="user-stat">
                 <span class="stat-label">Solde</span>
@@ -44,6 +43,7 @@
                 <div class="dropdown" id="user-dropdown">
                     <a href="/profile" class="dropdown-item">Mon profil</a>
                     <a href="/wallet" class="dropdown-item">Mon portefeuille</a>
+                    <a href="/leaderboard" class="dropdown-item">Leaderboard</a>
                     {{#admin}}
                     <a href="/admin" class="dropdown-item">Administration</a>
                     {{/admin}}

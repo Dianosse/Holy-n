@@ -184,6 +184,13 @@ async function patchResolvePoll(req, res) {
             });
         }
 
+        if (poll.datecloture && new Date(poll.datecloture) > new Date()) {
+            return res.status(400).json({
+                success: false,
+                error: "Impossible de résoudre un pari avant sa date de clôture"
+            });
+        }
+
         const pariChoixExistant = await parichoix.findOne({
             where : {
                 idpari : poll.id,
@@ -201,7 +208,7 @@ async function patchResolvePoll(req, res) {
         await poll.update({
             idchoixgagnant : idChoix,
             actif: false,
-            dateresolution: new Date()
+            datearchivage: new Date()
         });
 
         return res.status(200).json({
@@ -231,7 +238,7 @@ async function patchRedistributePoll(req, res) {
             });
         }
 
-        if (poll.actif !== false || !poll.dateresolution || !poll.idchoixgagnant) {
+        if (poll.actif !== false || !poll.datearchivage || !poll.idchoixgagnant) {
             return res.status(400).json({
                 success: false,
                 error: "Le pari doit être résolu avant redistribution"

@@ -33,12 +33,6 @@
                     </div>
                 </div>
                 <div class="admin-card-actions">
-                    <select class="form-input resolve-select">
-                        <option value="">-- Choisir le gagnant --</option>
-                        {{#idchoix_choixes}}
-                        <option value="{{id}}">{{libelle}}</option>
-                        {{/idchoix_choixes}}
-                    </select>
                     <button onclick="acceptPoll('{{id}}')" class="btn-sm btn-green">Accepter</button>
                     <button onclick="refusePoll('{{id}}')" class="btn-sm btn-red">Refuser</button>
                 </div>
@@ -50,7 +44,7 @@
         </section>
 
         <section class="admin-section">
-            <h2 class="admin-section-title">Paris actifs</h2>
+            <h2 class="admin-section-title">Paris en cours</h2>
             {{#activePolls}}
             <div class="admin-card">
                 <div class="admin-card-info">
@@ -59,6 +53,41 @@
                     <div class="tag-chips">
                         {{#idtag_tags}}<span class="tag-chip">{{libelle}}</span>{{/idtag_tags}}
                     </div>
+                    {{#datecloture_str}}<p class="admin-card-cloture">Clôture le <strong>{{datecloture_str}}</strong></p>{{/datecloture_str}}
+                </div>
+                <div class="admin-card-actions">
+                    <div class="resolve-disabled-hint">
+                        <select class="form-input resolve-select" disabled>
+                            <option value="">-- Choisir le gagnant --</option>
+                            {{#idchoix_choixes}}
+                            <option value="{{id}}">{{libelle}}</option>
+                            {{/idchoix_choixes}}
+                        </select>
+                        <span class="resolve-locked-label">Résolution disponible après la clôture</span>
+                    </div>
+                    <button onclick="closePoll('{{id}}')" class="btn-sm btn-red">Annuler &amp; rembourser</button>
+                </div>
+            </div>
+            {{/activePolls}}
+            {{^activePolls}}
+            <p class="empty-state">Aucun pari en cours</p>
+            {{/activePolls}}
+        </section>
+
+        <section class="admin-section">
+            <h2 class="admin-section-title">Paris à résoudre</h2>
+            {{#noClosedPolls}}
+            <p class="empty-state">Aucun pari en attente de résolution</p>
+            {{/noClosedPolls}}
+            {{#closedPolls}}
+            <div class="admin-card">
+                <div class="admin-card-info">
+                    <p class="admin-card-title">{{intitule}}</p>
+                    <p class="admin-card-desc">{{description}}</p>
+                    <div class="tag-chips">
+                        {{#idtag_tags}}<span class="tag-chip">{{libelle}}</span>{{/idtag_tags}}
+                    </div>
+                    {{#datecloture_str}}<p class="admin-card-cloture">Clôturé le <strong>{{datecloture_str}}</strong></p>{{/datecloture_str}}
                 </div>
                 <div class="admin-card-actions">
                     <select class="form-input resolve-select">
@@ -68,13 +97,10 @@
                         {{/idchoix_choixes}}
                     </select>
                     <button onclick="resolvePoll('{{id}}', this)" class="btn-sm btn-navy">Résoudre</button>
-                    <button onclick="closePoll('{{id}}')" class="btn-sm btn-red">Fermer</button>
+                    <button onclick="closePoll('{{id}}')" class="btn-sm btn-red">Annuler &amp; rembourser</button>
                 </div>
             </div>
-            {{/activePolls}}
-            {{^activePolls}}
-            <p class="empty-state">Aucun pari actif</p>
-            {{/activePolls}}
+            {{/closedPolls}}
         </section>
 
         <section class="admin-section">

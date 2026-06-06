@@ -14,76 +14,103 @@
     {{> header}}
 
     <main class="main-content" data-poll-id="{{poll.id}}">
-        <div class="poll-detail">
 
-            <div id="poll-msg"></div>
+        <div id="poll-msg"></div>
 
-            <div class="poll-detail-card">
-                <div class="tag-chips" style="margin-bottom: 12px;">
-                    {{#poll.idtag_tags}}<span class="tag-chip">{{libelle}}</span>{{/poll.idtag_tags}}
+        <div class="poll-layout">
+
+            <!-- Colonne principale : infos + courbe -->
+            <div class="poll-main">
+
+                <div class="poll-detail-card">
+                    <div class="tag-chips" style="margin-bottom: 12px;">
+                        {{#poll.idtag_tags}}<span class="tag-chip">{{libelle}}</span>{{/poll.idtag_tags}}
+                    </div>
+                    <h1 class="poll-detail-title">{{poll.intitule}}</h1>
+                    <p class="poll-detail-desc">{{poll.description}}</p>
+                    <div class="poll-meta">
+                        {{#creator}}
+                        <span>Créé par <strong>{{pseudo}}</strong></span>
+                        {{/creator}}
+                        {{#poll.datecreation_str}}
+                        <span>Le <strong>{{poll.datecreation_str}}</strong></span>
+                        {{/poll.datecreation_str}}
+                        {{#poll.datecloture_str}}
+                        <span>Clôture le <strong>{{poll.datecloture_str}}</strong></span>
+                        {{/poll.datecloture_str}}
+                    </div>
+                    <div class="poll-volume">
+                        <span class="poll-volume-label">Volume total misé</span>
+                        <strong class="poll-volume-amount">{{poll.totalVolumeChoix}} €</strong>
+                    </div>
                 </div>
 
-                <h1 class="poll-detail-title">{{poll.intitule}}</h1>
-                <p class="poll-detail-desc">{{poll.description}}</p>
-
-                <div class="poll-meta">
-                    {{#creator}}
-                    <span>Créé par <strong>{{pseudo}}</strong></span>
-                    {{/creator}}
-                    {{#poll.datecreation_str}}
-                    <span>Le <strong>{{poll.datecreation_str}}</strong></span>
-                    {{/poll.datecreation_str}}
-                    {{#poll.datecloture_str}}
-                    <span>Clôture le <strong>{{poll.datecloture_str}}</strong></span>
-                    {{/poll.datecloture_str}}
+                <!-- Courbe des probabilités -->
+                <div class="poll-detail-card poll-chart-card">
+                    <div class="poll-chart-header">
+                        <h2 class="poll-chart-title">Probabilités</h2>
+                        <div id="chart-legend" class="chart-legend"></div>
+                    </div>
+                    <div class="poll-chart-wrap">
+                        <canvas id="poll-chart"></canvas>
+                        <div id="chart-empty" class="chart-empty" style="display:none">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+                                <path d="M3 3v18h18M7 16l4-4 4 4 4-8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <p>Aucune mise placée pour le moment.<br>Le graphique s'affichera dès le premier pari.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="poll-volume">
-                    <span class="poll-volume-label">Volume total misé</span>
-                    <strong class="poll-volume-amount">{{poll.totalVolumeChoix}} €</strong>
-                </div>
             </div>
 
-            <div class="poll-detail-card">
-                <h2 class="wallet-form-title">Choisir un camp</h2>
+            <!-- Sidebar : choisir un camp -->
+            <div class="poll-sidebar">
+                <div class="poll-detail-card poll-bet-card">
+                    <h2 class="poll-bet-title">Choisir un camp</h2>
 
-                {{^user}}
-                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">
-                    <a href="/login" style="color: var(--navy); font-weight: 600;">Connectez-vous</a> pour parier sur ce pari.
-                </p>
-                {{/user}}
+                    {{^user}}
+                    <p class="poll-login-hint">
+                        <a href="/login">Connectez-vous</a> pour parier sur ce pari.
+                    </p>
+                    {{/user}}
 
-                <div class="poll-choices-grid">
-                    {{#poll.idchoix_choixes}}
-                    <div class="poll-choice-card {{#userMise}}has-user-bet{{/userMise}}">
-                        <div class="poll-choice-header">
-                            <span class="poll-choice-label">{{libelle}}</span>
-                            <span class="poll-choice-quote">{{quote_str}}</span>
-                        </div>
-                        <div class="poll-choice-stats">
-                            <span class="poll-choice-mise-total">{{totalMise}} € misés</span>
-                            {{#userMise}}
-                            <span class="poll-choice-user-mise">Votre mise : <strong>{{userMise}} €</strong></span>
-                            {{/userMise}}
-                        </div>
-                        {{#loggedIn}}
-                        <button class="bet-choice-btn orange bet-trigger" data-choice-id="{{id}}">Parier</button>
-                        <div class="bet-inline-form" id="bet-form-{{id}}" style="display:none">
-                            <input type="number" class="form-input bet-amount-input" placeholder="Montant (€)" min="0.01" step="0.01">
-                            <div class="bet-form-actions">
-                                <button class="btn btn-orange btn-sm bet-confirm" data-choice-id="{{id}}">Confirmer</button>
-                                <button class="btn btn-sm btn-muted bet-cancel" data-choice-id="{{id}}">Annuler</button>
+                    <div class="poll-choices-list">
+                        {{#poll.idchoix_choixes}}
+                        <div class="poll-choice-card {{#userMise}}has-user-bet{{/userMise}}">
+                            <div class="poll-choice-header">
+                                <span class="poll-choice-label">{{libelle}}</span>
+                                <span class="poll-choice-quote">{{quote_str}}</span>
                             </div>
+                            <div class="poll-choice-bar-wrap">
+                                <div class="poll-choice-bar" style="width:{{proba_pct}}%"></div>
+                            </div>
+                            <div class="poll-choice-stats">
+                                <span class="poll-choice-mise-total">{{totalMise}} € misés</span>
+                                {{#userMise}}
+                                <span class="poll-choice-user-mise">Votre mise : <strong>{{userMise}} €</strong></span>
+                                {{/userMise}}
+                            </div>
+                            {{#loggedIn}}
+                            <button class="bet-choice-btn orange bet-trigger" data-choice-id="{{id}}">Parier</button>
+                            <div class="bet-inline-form" id="bet-form-{{id}}" style="display:none">
+                                <input type="number" class="form-input bet-amount-input" placeholder="Montant (€)" min="0.01" step="0.01">
+                                <div class="bet-form-actions">
+                                    <button class="btn btn-orange btn-sm bet-confirm" data-choice-id="{{id}}">Confirmer</button>
+                                    <button class="btn btn-sm btn-muted bet-cancel" data-choice-id="{{id}}">Annuler</button>
+                                </div>
+                            </div>
+                            {{/loggedIn}}
                         </div>
-                        {{/loggedIn}}
+                        {{/poll.idchoix_choixes}}
                     </div>
-                    {{/poll.idchoix_choixes}}
                 </div>
             </div>
 
         </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/poll.js"></script>
 

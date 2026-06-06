@@ -3,7 +3,7 @@ const protect = require("../middlewares/auth");
 
 const router = require('express').Router();
 
-router.route('/leaderbord').get(usersController.getLeaderboard);            // fait
+router.route('/leaderboard').get(usersController.getLeaderboard);            // fait
 
 router.route('/me').put(protect, usersController.modifyUser)                // fait
                             .delete(protect, usersController.deleteUser);         // fait

@@ -543,41 +543,115 @@ body {
 /* ========================
    WALLET
 ======================== */
-.wallet-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    margin-bottom: 28px;
+/* Balance card */
+.balance-card {
+    margin-bottom: 24px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(26, 40, 105, 0.22);
 }
 
-.wallet-stat-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    padding: 24px 28px;
-    box-shadow: var(--shadow);
+.balance-card-inner {
+    background: linear-gradient(135deg, #1A2869 0%, #243590 55%, #1a2f7a 100%);
+    padding: 32px 36px;
+    color: white;
+    position: relative;
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    overflow: hidden;
 }
 
-.wallet-stat-label {
-    font-size: 12px;
+.balance-card-inner::before {
+    content: '';
+    position: absolute;
+    top: -70px;
+    right: -70px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+}
+
+.balance-card-inner::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    right: 80px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+}
+
+.balance-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+}
+
+.balance-label {
+    font-size: 11px;
     font-weight: 600;
-    color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
 }
 
-.wallet-stat-value {
-    font-size: 32px;
+.balance-brand {
+    font-size: 15px;
     font-weight: 700;
-    color: var(--navy);
-}
-
-.wallet-stat-value.orange {
     color: var(--orange);
+    letter-spacing: -0.3px;
 }
 
+.balance-amount {
+    font-size: 46px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin: 10px 0 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.balance-footer {
+    display: flex;
+    gap: 48px;
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    position: relative;
+    z-index: 1;
+}
+
+.balance-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.balance-sub-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.balance-sub-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Wallet forms */
 .wallet-forms {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -589,13 +663,98 @@ body {
     border-radius: var(--radius);
     padding: 28px;
     box-shadow: var(--shadow);
+    border-top: 3px solid transparent;
+}
+
+.wallet-deposit {
+    border-top-color: var(--orange);
+}
+
+.wallet-withdraw {
+    border-top-color: var(--navy);
+}
+
+.wallet-form-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.wallet-form-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.wallet-deposit .wallet-form-icon {
+    color: var(--orange);
+}
+
+.wallet-withdraw .wallet-form-icon {
+    color: var(--navy);
 }
 
 .wallet-form-title {
     font-size: 16px;
     font-weight: 700;
     color: var(--navy);
+}
+
+.quick-amounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 20px;
+}
+
+.quick-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-btn);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    font-family: inherit;
+}
+
+.quick-btn:hover {
+    border-color: var(--navy);
+    background: var(--navy);
+    color: white;
+}
+
+.quick-btn-max {
+    border-color: var(--orange);
+    color: var(--orange);
+}
+
+.quick-btn-max:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: white;
+}
+
+.input-prefix-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-prefix {
+    position: absolute;
+    left: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.form-input.with-prefix {
+    padding-left: 30px;
 }
 
 /* ========================
@@ -924,18 +1083,29 @@ body {
 /* ========================
    POLL DETAIL
 ======================== */
-.poll-detail {
-    max-width: 760px;
-    margin: 0 auto;
+/* Poll page layout */
+.poll-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    align-items: start;
+}
+
+.poll-main {
     display: flex;
     flex-direction: column;
     gap: 18px;
 }
 
+.poll-sidebar {
+    position: sticky;
+    top: 84px;
+}
+
 .poll-detail-card {
     background: var(--white);
     border-radius: var(--radius);
-    padding: 32px;
+    padding: 28px 32px;
     box-shadow: var(--shadow);
 }
 
@@ -962,29 +1132,60 @@ body {
     color: var(--text-muted);
 }
 
-.poll-choices-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+/* Betting sidebar card */
+.poll-bet-card {
+    padding: 24px;
+}
+
+.poll-bet-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 16px;
+}
+
+.poll-login-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+}
+
+.poll-login-hint a {
+    color: var(--navy);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.poll-login-hint a:hover { text-decoration: underline; }
+
+.poll-choices-list {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
 .poll-choice-card {
     border: 1.5px solid var(--border);
     border-radius: var(--radius-btn);
-    padding: 16px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    transition: border-color 0.15s;
 }
 
-.poll-choice-card .bet-choice-btn {
-    flex: none;
-    width: 100%;
+.poll-choice-card:hover {
+    border-color: var(--navy);
+}
+
+.poll-choice-card.has-user-bet {
+    border-color: var(--orange);
+    background: rgba(240, 90, 34, 0.04);
 }
 
 .poll-choice-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 8px;
 }
@@ -1003,10 +1204,30 @@ body {
     flex-shrink: 0;
 }
 
+/* Progress bar */
+.poll-choice-bar-wrap {
+    height: 4px;
+    background: var(--card-placeholder);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.poll-choice-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), #f07a22);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    min-width: 2px;
+}
+
+.poll-choice-card.has-user-bet .poll-choice-bar {
+    background: linear-gradient(90deg, var(--orange), #e04a12);
+}
+
 .poll-choice-stats {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 }
 
 .poll-choice-mise-total {
@@ -1019,9 +1240,79 @@ body {
     color: var(--navy);
 }
 
-.poll-choice-card.has-user-bet {
-    border-color: var(--orange);
-    background: rgba(255, 107, 0, 0.04);
+.poll-choice-card .bet-choice-btn {
+    width: 100%;
+    flex: none;
+}
+
+/* Chart card */
+.poll-chart-card {
+    padding: 24px 28px;
+}
+
+.poll-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+}
+
+.poll-chart-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    flex-shrink: 0;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: flex-end;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--navy);
+}
+
+.chart-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.poll-chart-wrap {
+    position: relative;
+    height: 280px;
+}
+
+.poll-chart-wrap canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.chart-empty p {
+    font-size: 13px;
+    line-height: 1.6;
 }
 
 .poll-volume {
@@ -1355,6 +1646,146 @@ body {
 }
 
 /* ========================
+   ADMIN — resolve disabled
+======================== */
+.resolve-disabled-hint {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.resolve-locked-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.admin-card-cloture {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+select:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ========================
+   LEADERBOARD
+======================== */
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: capitalize;
+}
+
+.leaderboard-podium {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 32px;
+    min-height: 260px;
+}
+
+.podium-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--navy);
+    position: relative;
+    flex: 1;
+    max-width: 200px;
+    cursor: pointer;
+}
+
+.podium-card:hover .avatar-circle {
+    transform: scale(1.07);
+    transition: transform 0.15s;
+}
+
+.podium-crown {
+    font-size: 28px;
+    margin-bottom: 6px;
+}
+
+.podium-rank {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.podium-pseudo {
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.podium-gain {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--orange);
+    margin-top: 4px;
+    margin-bottom: 12px;
+}
+
+.podium-base {
+    width: 100%;
+    border-radius: 8px 8px 0 0;
+}
+
+.podium-base-1 { height: 100px; background: linear-gradient(180deg, #F8C945 0%, #E5A800 100%); }
+.podium-base-2 { height: 70px; background: linear-gradient(180deg, #C8CDD4 0%, #A8ADB4 100%); }
+.podium-base-3 { height: 50px; background: linear-gradient(180deg, #D4936A 0%, #B8714A 100%); }
+
+.leaderboard-table-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.leaderboard-rank-cell { width: 56px; text-align: center; }
+
+.rank-medal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.rank-medal.gold   { background: #F8C945; color: #7a5c00; }
+.rank-medal.silver { background: #C8CDD4; color: #555; }
+.rank-medal.bronze { background: #D4936A; color: #5a2e10; }
+.rank-number { font-size: 14px; font-weight: 600; color: var(--text-muted); }
+
+.leaderboard-row-gold   { background: rgba(248, 201, 69, 0.08); }
+.leaderboard-row-silver { background: rgba(200, 205, 212, 0.12); }
+.leaderboard-row-bronze { background: rgba(212, 147, 106, 0.08); }
+
+.leaderboard-player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--navy);
+    font-weight: 500;
+}
+
+.leaderboard-gain {
+    font-weight: 700;
+    color: var(--orange);
+    font-size: 15px;
+}
+
+/* ========================
    USER PUBLIC PROFILE
 ======================== */
 .user-profile-layout {
@@ -1496,10 +1927,30 @@ body {
     }
 }
 
+@media (max-width: 960px) {
+    .poll-layout {
+        grid-template-columns: 1fr;
+    }
+    .poll-sidebar {
+        position: static;
+    }
+}
+
 @media (max-width: 768px) {
-    .wallet-stats,
     .wallet-forms {
         grid-template-columns: 1fr;
+    }
+
+    .balance-card-inner {
+        padding: 24px 20px;
+    }
+
+    .balance-amount {
+        font-size: 34px;
+    }
+
+    .balance-footer {
+        gap: 28px;
     }
 
     .admin-card {
@@ -1513,9 +1964,21 @@ body {
         flex-wrap: wrap;
     }
 
+    .poll-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .poll-sidebar {
+        position: static;
+    }
+
+    .poll-chart-wrap {
+        height: 220px;
+    }
+
     .page-card,
     .poll-detail-card {
-        padding: 24px 20px;
+        padding: 20px 16px;
     }
 
     .header {
