@@ -1,6 +1,27 @@
 let choiceCount = 2;
 const customTags = [];
 
+// Remplissage des selects heure/minute
+(function initTimeSelects() {
+    const hSelect = document.querySelector('[name="heuresCloture"]');
+    const mSelect = document.querySelector('[name="minutesCloture"]');
+    if (!hSelect || !mSelect) return;
+    for (let h = 0; h < 24; h++) {
+        const opt = document.createElement('option');
+        opt.value = String(h).padStart(2, '0');
+        opt.textContent = String(h).padStart(2, '0') + 'h';
+        if (h === 23) opt.selected = true;
+        hSelect.appendChild(opt);
+    }
+    for (let m = 0; m < 60; m++) {
+        const opt = document.createElement('option');
+        opt.value = String(m).padStart(2, '0');
+        opt.textContent = String(m).padStart(2, '0');
+        if (m === 59) opt.selected = true;
+        mSelect.appendChild(opt);
+    }
+})();
+
 function addChoice() {
     if (choiceCount >= 10) return;
     choiceCount++;
@@ -72,13 +93,15 @@ async function submitPoll(e) {
         return;
     }
 
-    const dateCloture = form.dateCloture.value;
-    if (!dateCloture) {
+    const dateVal = form.dateCloture.value;
+    const heures = form.heuresCloture.value;
+    const minutes = form.minutesCloture.value;
+    if (!dateVal) {
         errorDiv.textContent = 'La date de clôture est obligatoire';
         errorDiv.classList.add('show');
         return;
     }
-    const dateClotureObj = new Date(dateCloture);
+    const dateClotureObj = new Date(`${dateVal}T${heures}:${minutes}:00`);
     if (isNaN(dateClotureObj.getTime()) || dateClotureObj <= new Date()) {
         errorDiv.textContent = 'La date de clôture doit être dans le futur';
         errorDiv.classList.add('show');

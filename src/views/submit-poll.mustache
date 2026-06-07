@@ -35,7 +35,14 @@
 
                 <div class="form-group">
                     <label class="form-label">Date de clôture</label>
-                    <input type="datetime-local" name="dateCloture" class="form-input">
+                    <div class="form-datetime">
+                        <input type="date" name="dateCloture" class="form-input">
+                        <div class="time-selects">
+                            <select name="heuresCloture" class="form-input time-select" aria-label="Heures"></select>
+                            <span class="time-sep">:</span>
+                            <select name="minutesCloture" class="form-input time-select" aria-label="Minutes"></select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
