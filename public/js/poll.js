@@ -3,6 +3,8 @@ const msgDiv = document.getElementById('poll-msg');
 
 const CHART_COLORS = ['#F05A22', '#1A2869', '#16A34A', '#7C3AED', '#0891B2'];
 
+let pollChart = null;
+
 function showPollMsg(text, isError) {
     msgDiv.textContent = text;
     msgDiv.className = isError ? 'error-message show' : 'success-message show';
@@ -46,7 +48,9 @@ document.querySelectorAll('.bet-confirm').forEach(btn => {
             const data = await res.json();
             if (res.ok) {
                 showPollMsg('Pari placé avec succès !');
-                setTimeout(() => location.reload(), 1200);
+                input.value = '';
+                form.style.display = 'none';
+                btn.disabled = false;
             } else {
                 showPollMsg(data.error || 'Erreur lors du pari', true);
                 btn.disabled = false;
@@ -78,13 +82,20 @@ async function initChart() {
             return;
         }
 
+        document.getElementById('chart-empty').style.display = 'none';
+        document.getElementById('poll-chart').style.display = '';
+
         const { labels, series } = json.data;
 
-        // Légende masquée : les libellés sont affichés directement au bout des courbes
         document.getElementById('chart-legend').style.display = 'none';
 
         const canvas = document.getElementById('poll-chart');
         const ctx = canvas.getContext('2d');
+
+        if (pollChart) {
+            pollChart.destroy();
+            pollChart = null;
+        }
 
         // Gradient fills
         const datasets = series.map((s, i) => {
@@ -93,6 +104,7 @@ async function initChart() {
             gradient.addColorStop(0, hexToRgba(color, 0.18));
             gradient.addColorStop(1, hexToRgba(color, 0));
             return {
+                id: s.id,
                 label: s.label,
                 data: s.data,
                 borderColor: color,
@@ -115,7 +127,6 @@ async function initChart() {
                 const { ctx, data } = chart;
                 ctx.save();
 
-                // Collecter les positions des derniers points
                 const points = data.datasets.map((ds, i) => {
                     const meta = chart.getDatasetMeta(i);
                     if (!meta.visible || !meta.data.length) return null;
@@ -140,15 +151,11 @@ async function initChart() {
 
                 points.forEach(({ x, y, label, value, color }) => {
                     const tx = x + 10;
-
-                    // Libellé (petit)
                     ctx.font = '500 11px Inter, system-ui, sans-serif';
                     ctx.fillStyle = color;
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(label, tx, y - 7);
-
-                    // Valeur actuelle (gras)
                     ctx.font = 'bold 13px Inter, system-ui, sans-serif';
                     ctx.fillText(`${value}%`, tx, y + 7);
                 });
@@ -157,7 +164,7 @@ async function initChart() {
             }
         };
 
-        new Chart(ctx, {
+        pollChart = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets },
             plugins: [endLabelPlugin],
@@ -207,3 +214,53 @@ async function initChart() {
 }
 
 initChart();
+
+// ── WebSocket — mises à jour en temps réel ─────────────────
+
+const socket = io();
+socket.emit('join-poll', pollId);
+
+socket.on('poll-update', data => {
+    // Mettre à jour le volume total
+    const volEl = document.querySelector('.poll-volume-amount');
+    if (volEl) volEl.textContent = data.totalVolumeChoix + ' €';
+
+    // Mettre à jour chaque choix
+    data.choices.forEach(c => {
+        const card = document.querySelector(`.poll-choice-card[data-choice-id="${c.id}"]`);
+        if (!card) return;
+        const bar = card.querySelector('.poll-choice-bar');
+        const quote = card.querySelector('.poll-choice-quote');
+        const miseTotal = card.querySelector('.poll-choice-mise-total');
+        if (bar) bar.style.width = c.proba_pct + '%';
+        if (quote) quote.textContent = c.quote_str;
+        if (miseTotal) miseTotal.textContent = c.totalMise + ' € misés';
+    });
+
+    // Mettre à jour le graphique
+    if (!pollChart) {
+        // Premier pari sur ce poll : initialiser le graphique depuis zéro
+        initChart();
+        return;
+    }
+
+    const todayLabel = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    const lastLabel = pollChart.data.labels[pollChart.data.labels.length - 1];
+
+    if (lastLabel === todayLabel) {
+        // Remplacer le dernier point (ligne plate du jour actuel)
+        pollChart.data.datasets.forEach(ds => {
+            const val = data.chartPoint.values[ds.id];
+            if (val !== undefined) ds.data[ds.data.length - 1] = val;
+        });
+    } else {
+        // Ajouter un nouveau point
+        pollChart.data.labels.push(data.chartPoint.label);
+        pollChart.data.datasets.forEach(ds => {
+            const val = data.chartPoint.values[ds.id];
+            ds.data.push(val !== undefined ? val : ds.data[ds.data.length - 1]);
+        });
+    }
+
+    pollChart.update('active');
+});

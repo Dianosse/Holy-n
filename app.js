@@ -1,8 +1,10 @@
 /* modules */
+const http = require('http');
 const express = require('express');
 const session = require('express-session');
 const mustacheExpress = require('mustache-express');
 const path = require('path');
+const { Server: SocketIOServer } = require('socket.io');
 
 require('dotenv').config();
 
@@ -24,7 +26,17 @@ const isAdmin = require('./src/middlewares/isAdmin');
 
 /* initialization */
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIOServer(server);
 const PORT = process.env.PORT || 3000;
+
+app.set('io', io);
+
+io.on('connection', socket => {
+    socket.on('join-poll', pollId => {
+        socket.join(`poll-${pollId}`);
+    });
+});
 
 /* models */
 const { users: userModel, tag: tagModel, pari: pariModel, choix: choixModel, amis: amisModel } = require('./src/models');
@@ -610,6 +622,6 @@ async function closeExpiredPolls() {
 closeExpiredPolls();
 setInterval(closeExpiredPolls, 5 * 60 * 1000);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -497,6 +497,56 @@ async function postBet(req, res) {
             solde : newSolde
         });
 
+        // Émettre la mise à jour en temps réel via WebSocket
+        try {
+            const io = req.app.get('io');
+            if (io) {
+                const updatedChoices = await sequelize.query(
+                    `SELECT c.id, COALESCE(SUM(m.montant), 0) AS total_mise
+                     FROM parichoix pc
+                     INNER JOIN choix c ON pc.idchoix = c.id
+                     LEFT JOIN mise m ON m.idchoix = c.id AND m.idpari = pc.idpari
+                     WHERE pc.idpari = :idPari
+                     GROUP BY c.id`,
+                    { replacements: { idPari: poll.id }, type: QueryTypes.SELECT }
+                );
+
+                let totalVol = 0;
+                updatedChoices.forEach(c => { totalVol += Number(c.total_mise); });
+                const nbChoix = updatedChoices.length;
+
+                const choicesPayload = updatedChoices.map(c => {
+                    const totalMise = Number(c.total_mise);
+                    const proba_pct = totalVol === 0
+                        ? Math.round(100 / nbChoix)
+                        : Math.round((totalMise / totalVol) * 100);
+                    let quote;
+                    if (totalVol === 0) quote = nbChoix;
+                    else if (totalMise === 0) quote = null;
+                    else quote = Number((totalVol / totalMise).toFixed(2));
+                    return {
+                        id: c.id,
+                        proba_pct,
+                        totalMise: totalMise.toFixed(2),
+                        quote_str: quote !== null ? `x${quote}` : '-'
+                    };
+                });
+
+                const chartLabel = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+                const chartValues = {};
+                choicesPayload.forEach(c => { chartValues[c.id] = c.proba_pct; });
+
+                io.to(`poll-${poll.id}`).emit('poll-update', {
+                    pollId: poll.id,
+                    totalVolumeChoix: totalVol.toFixed(2),
+                    choices: choicesPayload,
+                    chartPoint: { label: chartLabel, values: chartValues }
+                });
+            }
+        } catch (wsErr) {
+            console.error('[ws] emit error:', wsErr.message);
+        }
+
         return res.status(200).json({
             success : true,
             data : {
