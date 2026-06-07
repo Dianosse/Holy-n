@@ -2,6 +2,12 @@ const { users } = require('../models')
 
 const passwordUtils = require('../utils/passwordHash');
 
+
+/**
+ * Permet la création d'un compte, tous les champs (mail, pseudo, password, passwordConfirm, nom, prenom) doivent être présents dans le bon format
+ * Condition mot de passe : au moins 8 caractères / une minuscule / une majuscule / un caractère spécial / un chiffre
+ * @Condition : aucun autre utilisateur ne doit avoir l'email de ce nouveau compte
+ */
 async function registerUser(req, res) {
     try {
         const {mail, pseudo, password, passwordConfirm, nom, prenom} = req.body;
@@ -94,6 +100,7 @@ async function registerUser(req, res) {
                 });
             }
 
+            // stock l'utilisateur au sein de req
             req.session.user = {
                 id: user.id,
                 mail: user.mail,
@@ -120,6 +127,11 @@ async function registerUser(req, res) {
     }
 }
 
+
+/**
+ * Connexion à un compte existant via l'email et le mot de passe
+ * @Condition : un utilisateur avec cet email doit exister et le mot de passe doit être valide
+ */
 async function loginUser(req, res) {
     try {
         const {mail, password} = req.body;
@@ -163,6 +175,7 @@ async function loginUser(req, res) {
                 });
             }
 
+            // stock l'utilisateur au sein de req
             req.session.user = {
                 id: userExistant.id,
                 mail: userExistant.mail,
@@ -189,6 +202,10 @@ async function loginUser(req, res) {
     }
 }
 
+
+/**
+ * Supprime la session de l'utilisateur connecté et retire le cookie.
+ */
 async function logoutUser(req, res) {
     try {
         req.session.destroy((err) => {
@@ -216,6 +233,10 @@ async function logoutUser(req, res) {
     }
 }
 
+
+/**
+ * Retourne les informations relatives à l'utilisateur actuellement connecté.
+ */
 async function getMe(req, res) {
     try {
         const user = await users.findOne({

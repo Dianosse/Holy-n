@@ -2,7 +2,9 @@ const { users, pari, choix, tag, parichoix, mise } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require("../config/database");
 
-
+/**
+ * Permet à un admin d'avoir tous les pari en attente de validation.
+ */
 async function getAllPollsPending(req, res) {
     try {
         const allPollsPending = await pari.findAll({
@@ -46,6 +48,10 @@ async function getAllPollsPending(req, res) {
     }
 }
 
+/**
+ * Valide le pari dont l'ID est fourni en le rendant actif/visible/approuve
+ * @Condition : l'ID fourni doit correspondre à un pari existant
+ */
 async function patchAcceptPoll(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -79,6 +85,11 @@ async function patchAcceptPoll(req, res) {
     }
 }
 
+/**
+ * Refuse le pari dont l'ID est fourni. En le refusant, le pari est directement archivé.
+ * Les mises déjà placées sur ce pari sont remboursées aux utilisateurs.
+ * @Condition : l'ID fourni doit correspondre à un pari existant
+ */
 async function patchRefusePoll(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -121,6 +132,12 @@ async function patchRefusePoll(req, res) {
     }
 }
 
+
+/**
+ * Ferme le pari dont l'ID est fourni.
+ * Le pari devient inactif et invisible, puis les mises sont remboursées.
+ * @Condition : l'ID fourni doit correspondre à un pari existant.
+ */
 async function patchClosePoll(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -162,6 +179,16 @@ async function patchClosePoll(req, res) {
     }
 }
 
+
+/**
+ * Résout un pari en définissant le choix gagnant.
+ * Le pari doit être clôturé et le choix gagnant doit appartenir au pari.
+ * @Condition : le pari et le choix doivent exister.
+ * Exemple de body :
+ * {
+ *     "idChoix" : "67b85b91-c10a-43bd-be9f-60cf62eb4580"
+ * }
+ */
 async function patchResolvePoll(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -227,7 +254,13 @@ async function patchResolvePoll(req, res) {
     }
 }
 
-async function patchRedistributePoll(req, res) {
+
+/**
+ * Redistribue l'argent misé sur un pari résolu.
+ * Les gagnants se partagent le total des mises proportionnellement à leur mise.
+ * Si personne n'a misé sur le choix gagnant, toutes les mises sont remboursées.
+ * @Condition : le pari doit être résolu avant la redistribution.
+ */async function patchRedistributePoll(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
 

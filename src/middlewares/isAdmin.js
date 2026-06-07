@@ -1,5 +1,10 @@
 const { users } = require('../models');
 
+
+/**
+ * Permet de vérifier si l'utilisateur actuellement connecté a son boolean admin à true.
+ * Filtre les utilisateurs admin ou non pour accès à certaines routes API.
+ */
 async function isAdmin(req, res, next) {
     try {
         const userConnecte = await users.findByPk(req.user.id);

@@ -1,5 +1,9 @@
 const { users } = require('../models')
 
+
+/**
+ * Vérifie s'il y a un utilisateur actuellement connecté et s'il n'est pas banni.
+ */
 async function protect(req, res, next) {
     try {
         if (!req.session?.user) {

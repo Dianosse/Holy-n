@@ -7,6 +7,7 @@ const { QueryTypes } = require('sequelize');
 
 
 /**
+ * Retourne les pari visible/actif/approuve selon des paramètres personnalisables dans l'URL.
  * exemple de requête : http://localhost:3000/api/polls?search=aaaaa&tag=sport&sort=ASC&page=1&limit=10
  */
 async function getAllPolls(req, res) {
@@ -94,6 +95,12 @@ async function getAllPolls(req, res) {
     }
 }
 
+
+/**
+ * Retourne le pari dont l'ID est spécifié dans l'URL.
+ * Dans la réponse du back il y a les informations du pari mais également les informations concernant les tags et les choix de ce pari.
+ * @Condition : l'ID fourni doit correspondre à un pari existant.
+ */
 async function getPollById(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -198,6 +205,10 @@ async function deletePollById(req, res) {
     }
 }
 
+
+/**
+ * Retourne tous les tags existants.
+ */
 async function getAllTags(req, res) {
     try {
         const allTags = await tag.findAll();
@@ -219,6 +230,13 @@ async function getAllTags(req, res) {
 
 
 /**
+ * Permet la création d'un nouveau pari.
+ * Si un ou plusieurs des choix envoyé dans le body ne sont pas déjà présents en BD ils sont créés.
+ * En même temps que la création du pari dans la table "pari", les tables paritag et parichoix sont synchronisées.
+ * @Conditions :
+ *  - Les champs doivent être présents et dans le bon format.
+ *  - L'intitulé fourni ne doit pas correspondre à un pari existant.
+ *  - Tous les tags fourni doivent exister en BD.
  * Exemple du body du post :
  * {
  *   "intitule": "test test",
@@ -394,6 +412,14 @@ async function postSubmitPoll(req, res) {
 }
 
 /**
+ * Permet à un utilisateur connecté de miser sur un pari dont l'ID est fourni dans l'URL.
+ * @Conditions :
+ *  - L'ID fourni dans l'URL doit correspondre à un pari existant.
+ *  - Le pari visé doit être actif/visible et approuvé.
+ *  - "idChoix" dans le body doit correspondre à un choix existant.
+ *  - "montant" doit être un nombre positif.
+ *  - l'user connecté ne doit pas tomber en négatif de solde en pariant.
+ * Exemple de body :
  * {
  *   "idChoix": "67b85b91-c10a-43bd-be9f-60cf62eb4580",
  *   "montant": 25
@@ -485,7 +511,6 @@ async function postBet(req, res) {
             });
         }
 
-
         const newMise = await mise.create({
             iduser : userExistant.id,
             idpari : poll.id,
@@ -563,6 +588,9 @@ async function postBet(req, res) {
     }
 }
 
+/**
+ * Retourne toutes les mises effectuées pour un pari dont l'ID est fourni dans l'URL.
+ */
 async function getBets(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -598,6 +626,11 @@ async function getBets(req, res) {
 }
 
 
+/**
+ * Pour un pari dont l'ID est fourni retourne les côtes des différents choix.
+ * Une cote est calculé comme : total de mise sur le choix / total de mise sur tous les choix
+ * @Condition : l'ID fourni doit correspondre à un pari existant.
+ */
 async function getQuoteAllChoicesById(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -616,6 +649,7 @@ async function getQuoteAllChoicesById(req, res) {
             });
         }
 
+        // retourne tous les choix d'un pari ainsi que l'argent total parié sur chacun
         const choices = await sequelize.query(
             `
                 SELECT 

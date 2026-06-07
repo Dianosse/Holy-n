@@ -1,5 +1,9 @@
 const { users } = require('../models');
 
+
+/**
+ * Permet aux admins d'obtenir une liste de tous les utilisateurs.
+ */
 async function getAllUsers(req, res) {
     try {
         const allUsers = await users.findAll({
@@ -19,6 +23,13 @@ async function getAllUsers(req, res) {
     }
 }
 
+
+/**
+ * Permet à un admin de bannir un utilisateur dont l'ID est fourni dans l'URL.
+ * @Conditions :
+ *  - l'ID fourni correspond à un utilisateur existant
+ *  - l'utilisateur n'est pas déjà banni.
+ */
 async function patchBanUserById(req, res) {
     try {
         const userExistant = await users.findByPk(req.params.id);
@@ -57,6 +68,13 @@ async function patchBanUserById(req, res) {
     }
 }
 
+
+/**
+ * Permet à un admin de débannir un utilisateur dont l'ID est fourni dans l'URL.
+ * @Conditions :
+ *  - l'ID fourni correspond à un utilisateur existant
+ *  - l'utilisateur est déjà banni
+ */
 async function patchUnbanUserById(req, res) {
     try {
         const userExistant = await users.findByPk(req.params.id);
