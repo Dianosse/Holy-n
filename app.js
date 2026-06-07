@@ -5,6 +5,7 @@ const session = require('express-session');
 const mustacheExpress = require('mustache-express');
 const path = require('path');
 const { Server: SocketIOServer } = require('socket.io');
+const cookieLib = require('cookie');
 
 require('dotenv').config();
 
@@ -65,6 +66,38 @@ app.use(session({
         maxAge: 1000 * 60 * 60
     }
 }));
+
+// Reconnexion automatique via cookie remember_me
+app.use(async (req, res, next) => {
+    if (req.session?.user) return next();
+    const cookies = cookieLib.parse(req.headers.cookie || '');
+    const token = cookies.remember_token;
+    if (!token) return next();
+    try {
+        const dbUser = await userModel.findOne({
+            where: {
+                remember_token: token,
+                remember_token_expires: { [Op.gt]: new Date() },
+                ban: false
+            },
+            attributes: ['id', 'pseudo', 'admin', 'mail']
+        });
+        if (!dbUser) {
+            res.clearCookie('remember_token');
+            return next();
+        }
+        req.session.user = {
+            id: dbUser.id,
+            mail: dbUser.mail,
+            pseudo: dbUser.pseudo,
+            admin: dbUser.admin
+        };
+        req.session.save(() => next());
+    } catch (err) {
+        console.error('[remember_me]', err.message);
+        next();
+    }
+});
 
 async function getSessionUser(req) {
     if (!req.session?.user) return null;
@@ -619,6 +652,16 @@ async function closeExpiredPolls() {
     }
 }
 
+async function migrateRememberMe() {
+    try {
+        await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS remember_token TEXT`);
+        await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS remember_token_expires TIMESTAMPTZ`);
+    } catch (err) {
+        console.error('[migration] remember_me:', err.message);
+    }
+}
+
+migrateRememberMe();
 closeExpiredPolls();
 setInterval(closeExpiredPolls, 5 * 60 * 1000);
 

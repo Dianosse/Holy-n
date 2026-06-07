@@ -1,4 +1,6 @@
 const { users } = require('../models')
+const { v4: uuidv4 } = require('uuid');
+const cookieLib = require('cookie');
 
 const passwordUtils = require('../utils/passwordHash');
 
@@ -134,7 +136,7 @@ async function registerUser(req, res) {
  */
 async function loginUser(req, res) {
     try {
-        const {mail, password} = req.body;
+        const { mail, password, rememberMe } = req.body;
 
         if (!mail || !password) {
             return res.status(400).json({
@@ -166,7 +168,7 @@ async function loginUser(req, res) {
             });
         }
 
-        req.session.regenerate((err) => {
+        req.session.regenerate(async (err) => {
             if (err) {
                 console.error(err);
                 return res.status(500).json({
@@ -175,13 +177,28 @@ async function loginUser(req, res) {
                 });
             }
 
-            // stock l'utilisateur au sein de req
             req.session.user = {
                 id: userExistant.id,
                 mail: userExistant.mail,
                 pseudo: userExistant.pseudo,
                 admin: userExistant.admin
             };
+
+            if (rememberMe) {
+                try {
+                    const token = uuidv4();
+                    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    await userExistant.update({ remember_token: token, remember_token_expires: expires });
+                    res.cookie('remember_token', token, {
+                        httpOnly: true,
+                        secure: false,
+                        maxAge: 30 * 24 * 60 * 60 * 1000,
+                        sameSite: 'lax'
+                    });
+                } catch (tokenErr) {
+                    console.error('[remember_me]', tokenErr.message);
+                }
+            }
 
             return res.status(201).json({
                 success: true,
@@ -204,10 +221,19 @@ async function loginUser(req, res) {
 
 
 /**
- * Supprime la session de l'utilisateur connecté et retire le cookie.
+ * Supprime la session de l'utilisateur connecté, efface le remember_token et retire les cookies.
  */
 async function logoutUser(req, res) {
     try {
+        const cookies = cookieLib.parse(req.headers.cookie || '');
+        const token = cookies.remember_token;
+        if (token) {
+            await users.update(
+                { remember_token: null, remember_token_expires: null },
+                { where: { remember_token: token } }
+            );
+        }
+
         req.session.destroy((err) => {
             if (err) {
                 console.error(err);
@@ -218,6 +244,7 @@ async function logoutUser(req, res) {
             }
 
             res.clearCookie('connect.sid');
+            res.clearCookie('remember_token');
 
             return res.status(200).json({
                 success: true,

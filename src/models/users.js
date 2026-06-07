@@ -46,6 +46,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DECIMAL,
       allowNull: false,
       defaultValue: 0
+    },
+    remember_token: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    remember_token_expires: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     sequelize,

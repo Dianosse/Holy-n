@@ -6,7 +6,8 @@ async function submitLogin(e) {
 
     const body = {
         mail: form.mail.value.trim(),
-        password: form.password.value
+        password: form.password.value,
+        rememberMe: form.rememberMe.checked
     };
 
     try {
