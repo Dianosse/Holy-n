@@ -3,16 +3,19 @@ const msgDiv = document.getElementById('poll-msg');
 
 const CHART_COLORS = ['#F05A22', '#1A2869', '#16A34A', '#7C3AED', '#0891B2'];
 
+// variable où sera instancié l'objet chartJS
 let pollChart = null;
 
+// Affiche un message de succès ou d'erreur temporaire via classe CSS
 function showPollMsg(text, isError) {
     msgDiv.textContent = text;
     msgDiv.className = isError ? 'error-message show' : 'success-message show';
     setTimeout(() => msgDiv.classList.remove('show'), 4000);
 }
 
-// ── Betting forms ──────────────────────────────────────────
+// Formulaire de mise
 
+// Affiche le formulaire de mise correspondant au choix cliqué
 document.querySelectorAll('.bet-trigger').forEach(btn => {
     btn.addEventListener('click', () => {
         const id = btn.dataset.choiceId;
@@ -22,6 +25,7 @@ document.querySelectorAll('.bet-trigger').forEach(btn => {
     });
 });
 
+// Cache le formulaire de mise lorsque l’utilisateur annule
 document.querySelectorAll('.bet-cancel').forEach(btn => {
     btn.addEventListener('click', () => {
         const form = document.getElementById('bet-form-' + btn.dataset.choiceId);
@@ -29,6 +33,7 @@ document.querySelectorAll('.bet-cancel').forEach(btn => {
     });
 });
 
+// Confirme et envoie une mise à l’API sur la rute /api/polls/:id/bets
 document.querySelectorAll('.bet-confirm').forEach(btn => {
     btn.addEventListener('click', async () => {
         const choiceId = btn.dataset.choiceId;
@@ -36,6 +41,7 @@ document.querySelectorAll('.bet-confirm').forEach(btn => {
         const input = form.querySelector('.bet-amount-input');
         const montant = parseFloat(input.value);
 
+        // Vérifie que le montant saisi est valide
         if (!montant || montant <= 0) { showPollMsg('Montant invalide', true); return; }
 
         btn.disabled = true;
@@ -46,6 +52,7 @@ document.querySelectorAll('.bet-confirm').forEach(btn => {
                 body: JSON.stringify({ idChoix: choiceId, montant })
             });
             const data = await res.json();
+            // Si la mise est acceptée, on réinitialise le formulaire
             if (res.ok) {
                 showPollMsg('Pari placé avec succès !');
                 input.value = '';
@@ -62,7 +69,7 @@ document.querySelectorAll('.bet-confirm').forEach(btn => {
     });
 });
 
-// ── Chart ──────────────────────────────────────────────────
+// Graphique ChartJS
 
 function hexToRgba(hex, alpha) {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -71,17 +78,20 @@ function hexToRgba(hex, alpha) {
     return `rgba(${r},${g},${b},${alpha})`;
 }
 
+// Initialise le graphique à partir des données récupérées depuis l’API
 async function initChart() {
     try {
         const res = await fetch(`/api/polls/${pollId}/chart-data`);
         const json = await res.json();
 
+        // Affiche l’état vide si aucune donnée n’est disponible
         if (!res.ok || !json.success || json.data.isEmpty) {
             document.getElementById('chart-empty').style.display = 'flex';
             document.getElementById('poll-chart').style.display = 'none';
             return;
         }
 
+        // Sinon
         document.getElementById('chart-empty').style.display = 'none';
         document.getElementById('poll-chart').style.display = '';
 
@@ -97,7 +107,7 @@ async function initChart() {
             pollChart = null;
         }
 
-        // Gradient fills
+        // Crée les jeux de données pour chaque courbe
         const datasets = series.map((s, i) => {
             const color = CHART_COLORS[i % CHART_COLORS.length];
             const gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -127,6 +137,7 @@ async function initChart() {
                 const { ctx, data } = chart;
                 ctx.save();
 
+                // Récupère le dernier point visible de chaque courbe
                 const points = data.datasets.map((ds, i) => {
                     const meta = chart.getDatasetMeta(i);
                     if (!meta.visible || !meta.data.length) return null;
@@ -149,6 +160,7 @@ async function initChart() {
                     }
                 }
 
+                // Dessine le label et la valeur au bout de chaque courbe
                 points.forEach(({ x, y, label, value, color }) => {
                     const tx = x + 10;
                     ctx.font = '500 11px Inter, system-ui, sans-serif';
@@ -164,6 +176,7 @@ async function initChart() {
             }
         };
 
+        // Création du graphique ChartJS
         pollChart = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets },
@@ -207,19 +220,25 @@ async function initChart() {
         });
 
     } catch (err) {
+        // En cas d’erreur, affiche l’état vide à la place du graphique
         console.error('Chart error:', err);
         document.getElementById('chart-empty').style.display = 'flex';
         document.getElementById('poll-chart').style.display = 'none';
     }
 }
 
+// Lance l’initialisation du graphique au chargement
 initChart();
 
-// ── WebSocket — mises à jour en temps réel ─────────────────
+// WebSocket : mises à jour en temps réel
 
+// Connexion au serveur WebSocket
 const socket = io();
+
+// Rejoint le salon correspondant au poll courant
 socket.emit('join-poll', pollId);
 
+// Écoute les mises à jour temps réel du poll
 socket.on('poll-update', data => {
     // Mettre à jour le volume total
     const volEl = document.querySelector('.poll-volume-amount');
@@ -262,5 +281,6 @@ socket.on('poll-update', data => {
         });
     }
 
+    // Rafraîchit le graphique avec les nouvelles données
     pollChart.update('active');
 });

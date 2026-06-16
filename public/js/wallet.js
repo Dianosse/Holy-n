@@ -1,3 +1,4 @@
+// Affiche un message de succès ou d'erreur
 function showMsg(text, isError = false) {
     const msg = document.getElementById(isError ? 'wallet-error' : 'wallet-msg');
     const other = document.getElementById(isError ? 'wallet-msg' : 'wallet-error');
@@ -7,23 +8,27 @@ function showMsg(text, isError = false) {
     setTimeout(() => msg.classList.remove('show'), 4000);
 }
 
+// Remplit automatiquement un montant prédéfini
 function setAmount(type, amount) {
     const input = document.getElementById(type === 'deposit' ? 'deposit-input' : 'withdraw-input');
     input.value = amount;
     input.focus();
 }
 
+// Remplit le champ retrait avec le solde maximal disponible
 function setMax() {
     const input = document.getElementById('withdraw-input');
     input.value = Number(WALLET_SOLDE).toFixed(2);
     input.focus();
 }
 
+// Met à jour l'affichage du solde
 function updateSoldeDisplay(newSolde) {
     WALLET_SOLDE = newSolde;
     document.getElementById('solde-display').textContent = Number(newSolde).toFixed(2) + '€';
 }
 
+// Effectue un dépôt d'argent
 async function deposit(e) {
     e.preventDefault();
     const form = e.target;
@@ -53,6 +58,7 @@ async function deposit(e) {
     }
 }
 
+// Effectue un retrait d'argent
 async function withdraw(e) {
     e.preventDefault();
     const form = e.target;
