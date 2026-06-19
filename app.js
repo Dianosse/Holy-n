@@ -377,8 +377,29 @@ app.get('/admin', async (req, res) => {
 
         const [pendingPolls, activePolls, closedPolls, allUsers, allTags] = await Promise.all([
             pariModel.findAll({ where: { approuve: false, datearchivage: null }, include: includeChoixTag }),
-            pariModel.findAll({ where: { approuve: true, actif: true }, include: includeChoixTag }),
-            pariModel.findAll({ where: { approuve: true, actif: false, idchoixgagnant: null, datearchivage: null }, include: includeChoixTag }),
+            pariModel.findAll({
+                where: {
+                    approuve: true,
+                    actif: true,
+                    [Op.or]: [
+                        { datecloture: null },
+                        { datecloture: { [Op.gt]: now } }
+                    ]
+                },
+                include: includeChoixTag
+            }),
+            pariModel.findAll({
+                where: {
+                    approuve: true,
+                    idchoixgagnant: null,
+                    datearchivage: null,
+                    [Op.or]: [
+                        { actif: false },
+                        { datecloture: { [Op.lte]: now } }
+                    ]
+                },
+                include: includeChoixTag
+            }),
             userModel.findAll({ attributes: ['id', 'admin', 'nom', 'prenom', 'pseudo', 'ban', 'mail', 'solde'] }),
             tagModel.findAll({ attributes: ['id', 'libelle'] })
         ]);

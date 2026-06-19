@@ -29,6 +29,12 @@ async function refusePoll(id) {
     else showMsg(data.error || 'Erreur', true);
 }
 
+async function forceClosePoll(id) {
+    const { ok, data } = await adminFetch(`/api/admin/polls/${id}/force-close`, 'PATCH');
+    if (ok) { showMsg('Pari clôturé, en attente de résolution'); location.reload(); }
+    else showMsg(data.error || 'Erreur', true);
+}
+
 async function closePoll(id) {
     const { ok, data } = await adminFetch(`/api/admin/polls/${id}/close`, 'PATCH');
     if (ok) { showMsg('Pari fermé'); location.reload(); }

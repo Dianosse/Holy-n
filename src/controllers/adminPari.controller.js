@@ -189,6 +189,41 @@ async function patchClosePoll(req, res) {
  *     "idChoix" : "67b85b91-c10a-43bd-be9f-60cf62eb4580"
  * }
  */
+async function patchForceClosePoll(req, res) {
+    try {
+        const poll = await pari.findByPk(req.params.id);
+
+        if (!poll) {
+            return res.status(404).json({
+                success: false,
+                error: 'Pari introuvable'
+            });
+        }
+
+        if (!poll.actif) {
+            return res.status(400).json({
+                success: false,
+                error: 'Le pari est déjà clôturé'
+            });
+        }
+
+        await poll.update({ actif: false });
+
+        return res.status(200).json({
+            success: true,
+            data: { message: 'Pari clôturé, en attente de résolution' }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+
 async function patchResolvePoll(req, res) {
     try {
         const poll = await pari.findByPk(req.params.id);
@@ -340,6 +375,7 @@ module.exports = {
     patchAcceptPoll,
     patchRefusePoll,
     patchClosePoll,
+    patchForceClosePoll,
     patchResolvePoll,
     patchRedistributePoll
 }

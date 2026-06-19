@@ -9,6 +9,8 @@ router.route('/:id/refuse').patch(adminPariController.patchRefusePoll);         
 
 router.route('/:id/close').patch(adminPariController.patchClosePoll);               // ---> fait
 
+router.route('/:id/force-close').patch(adminPariController.patchForceClosePoll);   // ---> fait
+
 router.route('/:id/resolve').patch(adminPariController.patchResolvePoll);           // ---> fait
 
 router.route('/:id/redistribute').patch(adminPariController.patchRedistributePoll); // ---> fait
