@@ -22,8 +22,9 @@ const customTags = [];
     }
 })();
 
+// Ajout des choix au pari
 function addChoice() {
-    if (choiceCount >= 10) return;
+    if (choiceCount >= 10) return; // Si nombre de choix >= 10, on ajoute pas
     choiceCount++;
     const container = document.getElementById('choices-container');
     const div = document.createElement('div');
@@ -33,18 +34,20 @@ function addChoice() {
         <button type="button" class="choice-remove-btn" onclick="removeChoice(this)">×</button>
     `;
     container.appendChild(div);
+
     if (choiceCount >= 10) {
         document.getElementById('add-choice-btn').style.display = 'none';
-    }
+    } // Si choix égale à 10 on désactive le bouton d'ajout de choix
 }
 
 function removeChoice(btn) {
-    if (choiceCount <= 2) return;
+    if (choiceCount <= 2) return; // Si nombre de choix <= 2, on retire pas
     btn.closest('.choice-item').remove();
     choiceCount--;
-    document.getElementById('add-choice-btn').style.display = '';
+    document.getElementById('add-choice-btn').style.display = ''; // Activer le bouton d'ajout de choix
 }
 
+// AJout d'un nouveau tagg qui sera ajouter à la soumission du pari
 function addCustomTag() {
     const input = document.getElementById('new-tag-input');
     if (!input) return;
@@ -63,6 +66,7 @@ function addCustomTag() {
     input.value = '';
 }
 
+// retirer tag custoom
 function removeCustomTag(btn) {
     const chip = btn.closest('.tag-chip-removable');
     const value = chip.dataset.value;
@@ -71,6 +75,7 @@ function removeCustomTag(btn) {
     chip.remove();
 }
 
+// Soumet le pari
 async function submitPoll(e) {
     e.preventDefault();
     const form = e.target;
@@ -79,6 +84,7 @@ async function submitPoll(e) {
     errorDiv.classList.remove('show');
     successDiv.classList.remove('show');
 
+    // Vérification de chaque champ
     const intitule = form.intitule.value.trim();
     if (!intitule || intitule.length < 3) {
         errorDiv.textContent = "L'intitulé doit contenir au moins 3 caractères";
@@ -101,6 +107,7 @@ async function submitPoll(e) {
         errorDiv.classList.add('show');
         return;
     }
+
     const dateClotureObj = new Date(`${dateVal}T${heures}:${minutes}:00`);
     if (isNaN(dateClotureObj.getTime()) || dateClotureObj <= new Date()) {
         errorDiv.textContent = 'La date de clôture doit être dans le futur';

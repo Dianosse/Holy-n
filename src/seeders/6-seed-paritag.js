@@ -1,0 +1,56 @@
+'use strict';
+
+module.exports = {
+    async up(queryInterface) {
+        await queryInterface.bulkInsert('paritag', [
+            { idpari: 'fd81ac1e-87d9-4efd-b304-8dd1edcbd3a8', idtag: '3c9deec2-8030-4f1b-8dbe-be19c78c26b2' },
+            { idpari: 'fd81ac1e-87d9-4efd-b304-8dd1edcbd3a8', idtag: '7f3fc9b2-5d5d-45b6-919e-36ba10f2c1a1' },
+            { idpari: '5dc572d7-7e62-4fbf-a7f2-14ed5fa8ffa0', idtag: 'a075ac0f-5eff-41b1-a065-ca80d37427e0' },
+            { idpari: '5dc572d7-7e62-4fbf-a7f2-14ed5fa8ffa0', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: '7862ecd5-32e0-4260-b5a5-4d3d1434a522', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: 'a85d615c-77b4-49cd-abc5-d58d8c6e175d', idtag: '3c9deec2-8030-4f1b-8dbe-be19c78c26b2' },
+            { idpari: 'a85d615c-77b4-49cd-abc5-d58d8c6e175d', idtag: '7f3fc9b2-5d5d-45b6-919e-36ba10f2c1a1' },
+            { idpari: '0fa3971e-3b68-46fe-aebb-bcdf8686e04a', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: '0fa3971e-3b68-46fe-aebb-bcdf8686e04a', idtag: '1209497f-025b-46e7-810a-25a0d764c498' },
+            { idpari: 'e3328544-a1ac-40d0-832b-18e429e561d1', idtag: '8ae805ef-8ba0-485b-b990-47936ef91537' },
+            { idpari: 'e3328544-a1ac-40d0-832b-18e429e561d1', idtag: '1209497f-025b-46e7-810a-25a0d764c498' },
+            { idpari: 'cc6c36c2-ec66-4c1a-be2f-f75c1ed8baa8', idtag: '3c9deec2-8030-4f1b-8dbe-be19c78c26b2' },
+            { idpari: 'cc6c36c2-ec66-4c1a-be2f-f75c1ed8baa8', idtag: '7f3fc9b2-5d5d-45b6-919e-36ba10f2c1a1' },
+            { idpari: '69d51869-1e43-47b4-89c4-c67d9c0b406a', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: 'e1057259-bb19-457f-91ac-f655dd6acca4', idtag: 'a075ac0f-5eff-41b1-a065-ca80d37427e0' },
+            { idpari: '37dab1e9-6b51-4579-9386-15abf131108b', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: '2cece5a2-2ffb-4196-8491-cff6d0f5c972', idtag: '3c9deec2-8030-4f1b-8dbe-be19c78c26b2' },
+            { idpari: '2cece5a2-2ffb-4196-8491-cff6d0f5c972', idtag: '7f3fc9b2-5d5d-45b6-919e-36ba10f2c1a1' },
+            { idpari: 'b3ae9c29-b589-48d3-a16e-147c64bc66a9', idtag: 'a075ac0f-5eff-41b1-a065-ca80d37427e0' },
+            { idpari: 'b3ae9c29-b589-48d3-a16e-147c64bc66a9', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: '50d0cc89-cbb3-47ac-a35e-cfcd3df5d5cf', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: '3f546831-d5d0-4f5e-b801-08d09fd8ef3b', idtag: '8ae805ef-8ba0-485b-b990-47936ef91537' },
+            { idpari: '3f546831-d5d0-4f5e-b801-08d09fd8ef3b', idtag: '1209497f-025b-46e7-810a-25a0d764c498' },
+            { idpari: 'fd4c96a0-2448-4ed8-9c40-a9acbf7e06cc', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: 'be1f1784-eeb4-42df-9de6-b0fa3ecde899', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: 'be1f1784-eeb4-42df-9de6-b0fa3ecde899', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: '571b8540-5b7c-4b61-82f8-ea2cf5826fd7', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: '64d05e64-f650-4d5c-96e7-2e5097d6ab12', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: 'fe0cd518-6fd0-4fb7-bf12-4843445107ac', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: 'efea8954-10b2-424a-a16b-e42214bb16d2', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: 'efea8954-10b2-424a-a16b-e42214bb16d2', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: 'adb2f9b8-8e31-46aa-9a99-38955955135d', idtag: '3c9deec2-8030-4f1b-8dbe-be19c78c26b2' },
+            { idpari: 'adb2f9b8-8e31-46aa-9a99-38955955135d', idtag: '7f3fc9b2-5d5d-45b6-919e-36ba10f2c1a1' },
+            { idpari: '75854bb2-b943-40de-ad50-302185780b23', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: 'b5ad96db-47a2-4f42-a678-bcfb97b1c3e6', idtag: '3c9deec2-8030-4f1b-8dbe-be19c78c26b2' },
+            { idpari: 'b5ad96db-47a2-4f42-a678-bcfb97b1c3e6', idtag: '7f3fc9b2-5d5d-45b6-919e-36ba10f2c1a1' },
+            { idpari: 'ea80cfae-3a9b-4e42-b36b-9806122f79dc', idtag: '1c3bad7a-6d5d-4820-9c1a-c6e6d5c03140' },
+            { idpari: '48e744d2-d6d4-4e8c-8964-545a35678ec1', idtag: 'feea3a30-c8ed-4ffa-b017-07e2cb87fbe8' },
+            { idpari: '48e744d2-d6d4-4e8c-8964-545a35678ec1', idtag: '1209497f-025b-46e7-810a-25a0d764c498' },
+            { idpari: 'b7b160f1-923e-43bc-8320-93e2bd4bc304', idtag: 'a075ac0f-5eff-41b1-a065-ca80d37427e0' },
+            { idpari: '7e34d7db-5b2f-42b0-9cc3-937822d8a2c9', idtag: '4e1b6e54-f6f7-4cc3-a62e-7c89b1b1a3a2' },
+            { idpari: '27e882f4-2b39-402c-945c-d5a9825b6b2e', idtag: '1f81c2ef-6d20-4db1-b597-7bbeb9c04a0c' },
+            { idpari: 'fe29050a-5c24-4cc4-85dd-6d699860a174', idtag: '0d8ad8ef-7d6f-4cc9-9922-4c3e0e8dc30b' },
+            { idpari: '9b54f8dc-41c8-43a6-9770-8024fa7dc421', idtag: 'ffb5e812-d3c9-40d8-95cf-bf6806053b29' },
+        ]);
+    },
+
+    async down(queryInterface) {
+        await queryInterface.bulkDelete('paritag', null, {});
+    },
+};
